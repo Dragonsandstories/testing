@@ -54,3 +54,36 @@ button:disabled {
     background-color: #666;
     cursor: not-allowed;
 }
+.login-panel {
+    text-align: center;
+    padding: 20px;
+}
+
+.login-panel form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.login-panel input {
+    padding: 5px;
+    margin-bottom: 5px;
+}
+
+.login-panel button {
+    padding: 10px;
+    background-color: #6200ea;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.login-panel button:hover {
+    background-color: #4500a3;
+}
+
+#auth-message {
+    color: #ff4444;
+    margin-top: 10px;
+}

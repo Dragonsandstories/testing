@@ -3,32 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roguelike Mage Tower</title>
+    <title>Roguelike Mage Tower - Login</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <div class="panel player-stats">
-            <h2>Player Stats</h2>
-            <p>Health: <span id="player-health">100/100</span></p>
-            <p>Level: <span id="player-level">1</span></p>
-            <p>XP: <span id="player-xp">0/100</span></p>
-            <p>Gold: <span id="player-gold">0</span></p>
-            <p>Score: <span id="player-score">0</span></p>
-            <div id="auth-section"></div>
-        </div>
-        <div class="panel combat-log">
-            <h2>Combat Log</h2>
-            <div id="log">
-                <p>You enter the mysterious mage tower. Your journey begins on floor 1.</p>
+        <div class="panel login-panel">
+            <h2>Login or Register</h2>
+            <form id="auth-form">
+                <div>
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div>
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" id="login-button">Login</button>
+                <button type="button" id="register-button">Register</button>
+                <p id="auth-message"></p>
+            </form>
+            <div id="game-container" style="display: none;">
+                <div class="panel player-stats">
+                    <h2>Player Stats</h2>
+                    <p>Health: <span id="player-health">100/100</span></p>
+                    <p>Level: <span id="player-level">1</span></p>
+                    <p>XP: <span id="player-xp">0/100</span></p>
+                    <p>Gold: <span id="player-gold">0</span></p>
+                    <p>Score: <span id="player-score">0</span></p>
+                </div>
+                <div class="panel combat-log">
+                    <h2>Combat Log</h2>
+                    <div id="log">
+                        <p>You enter the mysterious mage tower. Your journey begins on floor 1.</p>
+                    </div>
+                    <button id="action-button">Cast Spell</button>
+                </div>
+                <div class="panel enemy-stats">
+                    <h2>Enemy Stats</h2>
+                    <p id="enemy-name">Slime</p>
+                    <p>Health: <span id="enemy-health">30/30</span></p>
+                    <p>Level: <span id="enemy-level">1</span></p>
+                </div>
             </div>
-            <button id="action-button">Cast Spell</button>
-        </div>
-        <div class="panel enemy-stats">
-            <h2>Enemy Stats</h2>
-            <p id="enemy-name">Slime</p>
-            <p>Health: <span id="enemy-health">30/30</span></p>
-            <p>Level: <span id="enemy-level">1</span></p>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>

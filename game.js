@@ -3,6 +3,25 @@ const SUPABASE_URL = 'https://lhkvzwsdidulwulghebk.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3Z6d3NkaWR1bHd1bGdoZWJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMTQ5OTksImV4cCI6MjA1Njc5MDk5OX0.lz3Pch5hBBO2Ug_iI5f2jMGV4Xwqt8t4RcPrn4_EzPw';
 const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// DOM elements
+const authForm = document.getElementById('auth-form');
+const emailInput = document.getElementById('email');
+const passwordInput = document.getElementById('password');
+const loginButton = document.getElementById('login-button');
+const registerButton = document.getElementById('register-button');
+const authMessage = document.getElementById('auth-message');
+const gameContainer = document.getElementById('game-container');
+const playerHealthEl = document.getElementById('player-health');
+const playerLevelEl = document.getElementById('player-level');
+const playerXpEl = document.getElementById('player-xp');
+const playerGoldEl = document.getElementById('player-gold');
+const playerScoreEl = document.getElementById('player-score');
+const enemyNameEl = document.getElementById('enemy-name');
+const enemyHealthEl = document.getElementById('enemy-health');
+const enemyLevelEl = document.getElementById('enemy-level');
+const logEl = document.getElementById('log');
+const actionButton = document.getElementById('action-button');
+
 // Game state
 let player = {
     health: 100,
@@ -39,18 +58,6 @@ let wave = 1;
 let enemiesDefeatedInWave = 0;
 let totalEnemiesDefeated = 0;
 
-// DOM elements
-const playerHealthEl = document.getElementById('player-health');
-const playerLevelEl = document.getElementById('player-level');
-const playerXpEl = document.getElementById('player-xp');
-const playerGoldEl = document.getElementById('player-gold');
-const playerScoreEl = document.getElementById('player-score');
-const enemyNameEl = document.getElementById('enemy-name');
-const enemyHealthEl = document.getElementById('enemy-health');
-const enemyLevelEl = document.getElementById('enemy-level');
-const logEl = document.getElementById('log');
-const actionButton = document.getElementById('action-button');
-
 // Log function
 function log(message) {
     logEl.innerHTML += `<p>${message}</p>`;
@@ -69,34 +76,6 @@ function updateUI() {
     enemyLevelEl.textContent = enemy.level;
 }
 
-// Update authentication UI
-function updateAuthUI() {
-    const authSection = document.getElementById('auth-section');
-    const user = supabase.auth.user();
-    if (user) {
-        authSection.innerHTML = `
-            <p>Logged in as ${user.email}</p>
-            <button id="logout-button">Logout</button>
-        `;
-        document.getElementById('logout-button').addEventListener('click', async () => {
-            await supabase.auth.signOut();
-        });
-    } else {
-        authSection.innerHTML = `
-            <button id="login-button">Login with Google</button>
-        `;
-        document.getElementById('login-button').addEventListener('click', async () => {
-            await supabase.auth.signInWithOAuth({ provider: 'google' });
-        });
-    }
-}
-
-// Listen for auth state changes
-supabase.auth.onAuthStateChange((event, session) => {
-    updateAuthUI();
-});
-
-// Level up and skill upgrade
 function checkLevelUp() {
     if (player.xp >= 100) {
         player.level++;
@@ -105,7 +84,6 @@ function checkLevelUp() {
         player.health = player.maxHealth;
         log(`You leveled up to Level ${player.level}! Health increased.`);
 
-        // Offer skill upgrade every level
         const skillToUpgrade = player.skills[Math.floor(Math.random() * player.skills.length)];
         if (skillToUpgrade.upgradeLevel < 3) {
             skillToUpgrade.upgradeLevel++;
@@ -200,9 +178,49 @@ async function submitHighscore() {
     }
 }
 
-// Event listener
+// Authentication functions
+async function handleLogin(email, password) {
+    const { user, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password
+    });
+    if (error) {
+        authMessage.textContent = `Login error: ${error.message}`;
+    } else {
+        authMessage.textContent = `Logged in as ${user.email}!`;
+        gameContainer.style.display = 'block';
+        authForm.style.display = 'none';
+        updateUI();
+    }
+}
+
+async function handleRegister(email, password) {
+    const { user, error } = await supabase.auth.signUp({
+        email: email,
+        password: password
+    });
+    if (error) {
+        authMessage.textContent = `Registration error: ${error.message}`;
+    } else {
+        authMessage.textContent = `Registration successful! Check your email for confirmation.`;
+    }
+}
+
+// Event listeners
+authForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = emailInput.value;
+    const password = passwordInput.value;
+    await handleLogin(email, password);
+});
+
+registerButton.addEventListener('click', async () => {
+    const email = emailInput.value;
+    const password = passwordInput.value;
+    await handleRegister(email, password);
+});
+
 actionButton.addEventListener('click', attack);
 
-// Initial UI update
+// Initial setup
 updateUI();
-updateAuthUI();
