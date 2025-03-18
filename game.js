@@ -2,6 +2,7 @@
 const SUPABASE_URL = 'https://lhkvzwsdidulwulghebk.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3Z6d3NkaWR1bHd1bGdoZWJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMTQ5OTksImV4cCI6MjA1Njc5MDk5OX0.lz3Pch5hBBO2Ug_iI5f2jMGV4Xwqt8t4RcPrn4_EzPw';
 const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 // DOM elements
 const authForm = document.getElementById('auth-form');
 const emailInput = document.getElementById('email');
