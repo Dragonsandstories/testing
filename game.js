@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     console.log('Supabase client created');
 
-    // Check if the required classes are available
+    // Check if required classes are available
     if (typeof SkillsManager !== 'function') {
         console.error('SkillsManager class is not defined. Check that skills.js is loaded properly.');
         return;
@@ -555,111 +555,117 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Showing character selection screen');
             gameState = 'character_select';
             
-            // Hide game and shop, show character select
+            // Force show character select panel
+            if (characterSelectEl) {
+                characterSelectEl.style.display = 'block';
+                console.log('Forced character select display: block');
+            } else {
+                console.error('Character select element not found');
+            }
+            
+            // Hide other panels
             if (gameContainer) gameContainer.style.display = 'none';
             if (shopEl) shopEl.style.display = 'none';
-            if (characterSelectEl) characterSelectEl.style.display = 'block';
             
-            // Load existing characters
-            console.log('Loading player characters');
-            const characters = await playerManager.getPlayerCharacters();
-            console.log(`Loaded ${characters.length} characters`);
-            
-            // Clear character list
+            // Get character list element
             const characterListEl = getElement('character-list');
             if (!characterListEl) {
                 console.error('Character list element not found');
-                return;
+                
+                // Create character list if it doesn't exist
+                if (characterSelectEl) {
+                    console.log('Creating character list element');
+                    const newList = document.createElement('div');
+                    newList.id = 'character-list';
+                    newList.className = 'character-list';
+                    characterSelectEl.appendChild(newList);
+                    
+                    // Now get the new element
+                    const newCharListEl = getElement('character-list');
+                    if (newCharListEl) {
+                        characterListEl = newCharListEl;
+                    }
+                }
+                
+                if (!characterListEl) return;
             }
             
+            // Clear the list
             characterListEl.innerHTML = '';
+            console.log('Cleared character list');
             
-            // Create a test character if no characters exist
-            if (characters.length === 0) {
-                console.log('No characters found, creating test character option');
-                
-                const charEl = document.createElement('div');
-                charEl.className = 'character-item';
-                
-                const nameEl = document.createElement('div');
-                nameEl.className = 'character-name';
-                nameEl.textContent = 'Create Your First Character';
-                
-                const infoEl = document.createElement('div');
-                infoEl.className = 'character-info';
-                infoEl.textContent = 'Start your adventure in the Mage Tower';
-                
-                charEl.appendChild(nameEl);
-                charEl.appendChild(infoEl);
-                
-                characterListEl.appendChild(charEl);
-            } else {
-                // Add existing characters
-                characters.forEach(character => {
-                    const charEl = document.createElement('div');
-                    charEl.className = 'character-item';
-                    
-                    const nameEl = document.createElement('div');
-                    nameEl.className = 'character-name';
-                    nameEl.textContent = character.name;
-                    
-                    const infoEl = document.createElement('div');
-                    infoEl.className = 'character-info';
-                    infoEl.textContent = `Level ${character.level} ${character.characterClass} - Tower Level ${character.towerLevel}`;
-                    
-                    const selectButton = document.createElement('button');
-                    selectButton.textContent = 'Select';
-                    selectButton.addEventListener('click', () => selectCharacter(character));
-                    
-                    const deleteButton = document.createElement('button');
-                    deleteButton.textContent = 'Delete';
-                    deleteButton.className = 'delete-button';
-                    deleteButton.addEventListener('click', () => deleteCharacter(character.id));
-                    
-                    charEl.appendChild(nameEl);
-                    charEl.appendChild(infoEl);
-                    charEl.appendChild(selectButton);
-                    charEl.appendChild(deleteButton);
-                    
-                    characterListEl.appendChild(charEl);
+            // Always add create new option first to ensure it's visible
+            console.log('Adding create new character option');
+            const createEl = document.createElement('div');
+            createEl.className = 'character-item create-new';
+            createEl.innerHTML = `
+                <div class="character-name">Create New Character</div>
+                <div class="create-form">
+                    <input type="text" id="new-char-name" placeholder="Character Name" required maxlength="20">
+                    <button id="create-char-btn">Create</button>
+                </div>
+            `;
+            characterListEl.appendChild(createEl);
+            
+            // Add event listener to the create button
+            const createBtn = document.getElementById('create-char-btn');
+            if (createBtn) {
+                createBtn.addEventListener('click', () => {
+                    const nameInput = document.getElementById('new-char-name');
+                    if (nameInput) {
+                        createCharacter(nameInput.value);
+                    }
                 });
             }
             
-            // Add "Create New" option if less than 3 characters
-            if (characters.length < 3) {
-                const createEl = document.createElement('div');
-                createEl.className = 'character-item create-new';
+            // Now try to load existing characters
+            try {
+                console.log('Loading player characters');
+                const characters = await playerManager.getPlayerCharacters();
+                console.log(`Loaded ${characters ? characters.length : 0} characters`);
                 
-                const headingEl = document.createElement('div');
-                headingEl.className = 'character-name';
-                headingEl.textContent = 'Create New Character';
-                
-                const formEl = document.createElement('div');
-                formEl.className = 'create-form';
-                
-                const nameInput = document.createElement('input');
-                nameInput.type = 'text';
-                nameInput.placeholder = 'Character Name';
-                nameInput.required = true;
-                nameInput.maxLength = 20;
-                
-                const createButton = document.createElement('button');
-                createButton.textContent = 'Create';
-                createButton.addEventListener('click', () => createCharacter(nameInput.value));
-                
-                formEl.appendChild(nameInput);
-                formEl.appendChild(createButton);
-                
-                createEl.appendChild(headingEl);
-                createEl.appendChild(formEl);
-                
-                characterListEl.appendChild(createEl);
+                // Add existing characters
+                if (characters && characters.length > 0) {
+                    characters.forEach(character => {
+                        const charEl = document.createElement('div');
+                        charEl.className = 'character-item';
+                        charEl.innerHTML = `
+                            <div class="character-name">${character.name}</div>
+                            <div class="character-info">Level ${character.level} ${character.characterClass} - Tower Level ${character.towerLevel}</div>
+                        `;
+                        
+                        const selectButton = document.createElement('button');
+                        selectButton.textContent = 'Select';
+                        selectButton.addEventListener('click', () => selectCharacter(character));
+                        
+                        const deleteButton = document.createElement('button');
+                        deleteButton.textContent = 'Delete';
+                        deleteButton.className = 'delete-button';
+                        deleteButton.addEventListener('click', () => deleteCharacter(character.id));
+                        
+                        charEl.appendChild(selectButton);
+                        charEl.appendChild(deleteButton);
+                        
+                        characterListEl.appendChild(charEl);
+                    });
+                } else {
+                    console.log('No characters found, only showing create option');
+                }
+            } catch (error) {
+                console.error('Error loading characters:', error);
+                // Still proceed with the create new option
             }
             
-            // Load highscores
-            loadHighscores();
+            // Try to load highscores, but don't block if it fails
+            try {
+                loadHighscores();
+            } catch (error) {
+                console.error('Error loading highscores:', error);
+            }
+            
+            console.log('Character selection screen setup complete');
         } catch (error) {
-            console.error('Error showing character selection:', error);
+            console.error('Error in showCharacterSelect:', error);
         }
     }
 
@@ -784,4 +790,87 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Start the game
     initGame();
+    
+    // Additional debugging code to force display elements after a short delay
+    setTimeout(() => {
+        console.log("Running debug visibility check");
+        
+        // Force show character select
+        const characterSelectEl = document.getElementById('character-select');
+        if (characterSelectEl) {
+            console.log("Character select element found, forcing display");
+            characterSelectEl.style.display = 'block';
+        } else {
+            console.log("CHARACTER SELECT ELEMENT NOT FOUND!");
+        }
+        
+        // Check what elements exist
+        const elements = [
+            'auth-form-container',
+            'character-select',
+            'character-list',
+            'game-container',
+            'shop-container'
+        ];
+        
+        console.log("Checking all critical elements:");
+        elements.forEach(id => {
+            const el = document.getElementById(id);
+            console.log(`Element '${id}': ${el ? 'Found' : 'NOT FOUND'}`);
+            if (el) {
+                console.log(`  - Display: ${window.getComputedStyle(el).display}`);
+                console.log(`  - Visibility: ${window.getComputedStyle(el).visibility}`);
+                console.log(`  - Height: ${window.getComputedStyle(el).height}`);
+            }
+        });
+        
+        // Try to force create a visible element if character select is still not showing
+        if (characterSelectEl && window.getComputedStyle(characterSelectEl).display === 'none') {
+            console.log("Creating emergency visibility indicator");
+            const forceElement = document.createElement('div');
+            forceElement.style.position = 'fixed';
+            forceElement.style.top = '10px';
+            forceElement.style.left = '10px';
+            forceElement.style.width = '300px';
+            forceElement.style.height = '200px';
+            forceElement.style.backgroundColor = 'red';
+            forceElement.style.color = 'white';
+            forceElement.style.padding = '20px';
+            forceElement.style.zIndex = '9999';
+            forceElement.innerHTML = '<h2>Visibility Test</h2><p>If you can see this, the display is working but game elements are hidden</p>';
+            document.body.appendChild(forceElement);
+            
+            // Create an emergency character creation form
+            const emergencyForm = document.createElement('div');
+            emergencyForm.style.position = 'fixed';
+            emergencyForm.style.top = '220px';
+            emergencyForm.style.left = '10px';
+            emergencyForm.style.width = '300px';
+            emergencyForm.style.backgroundColor = '#333';
+            emergencyForm.style.color = 'white';
+            emergencyForm.style.padding = '20px';
+            emergencyForm.style.zIndex = '9999';
+            emergencyForm.style.borderRadius = '10px';
+            emergencyForm.innerHTML = `
+                <h3 style="color: #6200ea; margin-top: 0;">Emergency Character Creation</h3>
+                <p>Character selection screen is hidden. Use this form instead:</p>
+                <div style="margin-bottom: 10px;">
+                    <input type="text" id="emergency-name" placeholder="Character Name" style="width: 100%; padding: 8px; box-sizing: border-box;">
+                </div>
+                <button id="emergency-create" style="background-color: #6200ea; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer;">Create Character</button>
+            `;
+            document.body.appendChild(emergencyForm);
+            
+            // Add event listener
+            document.getElementById('emergency-create').addEventListener('click', () => {
+                const nameInput = document.getElementById('emergency-name');
+                if (nameInput && nameInput.value.trim() !== '') {
+                    createCharacter(nameInput.value);
+                    emergencyForm.style.display = 'none';
+                } else {
+                    alert('Please enter a character name');
+                }
+            });
+        }
+    }, 2000); // 2 second delay to ensure everything has loaded
 });
