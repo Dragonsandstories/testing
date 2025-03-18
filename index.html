@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roguelike Mage Tower - Login</title>
+    <title>Roguelike Mage Tower</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <div class="panel login-panel">
+        <!-- Auth Panel -->
+        <div id="auth-form-container" class="panel login-panel">
             <h2>Login or Register</h2>
             <form id="auth-form">
                 <div>
@@ -23,38 +24,157 @@
                 <button type="button" id="register-button">Register</button>
                 <p id="auth-message"></p>
             </form>
-            <div id="game-container" style="display: none;">
-                <div class="panel player-stats">
-                    <h2>Player Stats</h2>
-                    <p>Health: <span id="player-health">100/100</span></p>
-                    <p>Level: <span id="player-level">1</span></p>
-                    <p>XP: <span id="player-xp">0/100</span></p>
-                    <p>Gold: <span id="player-gold">0</span></p>
-                    <p>Score: <span id="player-score">0</span></p>
-                </div>
-                <div class="panel combat-log">
-                    <h2>Combat Log</h2>
-                    <div id="log">
-                        <p>You enter the mysterious mage tower. Your journey begins on floor 1.</p>
+        </div>
+
+        <!-- Character Select Panel -->
+        <div id="character-select" class="panel">
+            <h2>Character Selection</h2>
+            <div id="character-list" class="character-list">
+                <!-- Character items will be populated here -->
+            </div>
+            <div class="highscore-section">
+                <h3>Highscores</h3>
+                <table id="highscore-table">
+                    <!-- Highscore data will be populated here -->
+                </table>
+            </div>
+        </div>
+
+        <!-- Game Container -->
+        <div id="game-container" style="display: none;">
+            <div class="panel player-stats">
+                <div class="character-name" id="player-name">Player</div>
+                <div class="stats-container">
+                    <div class="tower-info">
+                        <div>Tower Level: <span id="tower-level">1</span></div>
+                        <div>Progress: <span id="tower-progress">0/10</span></div>
+                        <div class="progress-bar">
+                            <div id="tower-progress-bar" class="progress-bar-fill" style="width: 0%"></div>
+                        </div>
                     </div>
-                    <button id="action-button">Cast Spell</button>
+                    
+                    <div class="stat-row">
+                        <div class="stat-label">Health:</div>
+                        <div class="stat-value" id="player-health">100/100</div>
+                    </div>
+                    <div class="health-bar">
+                        <div id="player-health-bar" class="health-bar-fill" style="width: 100%"></div>
+                    </div>
+                    
+                    <div class="stat-row">
+                        <div class="stat-label">Mana:</div>
+                        <div class="stat-value" id="player-mana">50/50</div>
+                    </div>
+                    <div class="mana-bar">
+                        <div id="player-mana-bar" class="mana-bar-fill" style="width: 100%"></div>
+                    </div>
+                    
+                    <div class="stat-row">
+                        <div class="stat-label">Level:</div>
+                        <div class="stat-value" id="player-level">1</div>
+                    </div>
+                    
+                    <div class="stat-row">
+                        <div class="stat-label">XP:</div>
+                        <div class="stat-value" id="player-xp">0/100</div>
+                    </div>
+                    <div class="xp-bar">
+                        <div id="player-xp-bar" class="xp-bar-fill" style="width: 0%"></div>
+                    </div>
+                    
+                    <div class="stat-row">
+                        <div class="stat-label">Gold:</div>
+                        <div class="stat-value" id="player-gold">0</div>
+                    </div>
+                    
+                    <div class="stat-row">
+                        <div class="stat-label">Score:</div>
+                        <div class="stat-value" id="player-score">0</div>
+                    </div>
                 </div>
-                <div class="panel enemy-stats">
-                    <h2>Enemy Stats</h2>
-                    <p id="enemy-name">Slime</p>
-                    <p>Health: <span id="enemy-health">30/30</span></p>
-                    <p>Level: <span id="enemy-level">1</span></p>
+            </div>
+            
+            <div class="panel combat-log">
+                <div class="combat-container">
+                    <div class="player-combat">
+                        <div class="player-avatar">🧙</div>
+                    </div>
+                    <div class="enemy-combat">
+                        <div class="enemy-avatar">👾</div>
+                    </div>
+                </div>
+                
+                <div id="log">
+                    <p class="log-info">You enter the mysterious mage tower. Your journey begins on floor 1.</p>
+                </div>
+                
+                <div id="action-buttons">
+                    <!-- Skill buttons will be populated here -->
+                </div>
+            </div>
+            
+            <div class="panel enemy-stats">
+                <div id="enemy-name" class="character-name">Monster</div>
+                <div class="stats-container">
+                    <div class="stat-row">
+                        <div class="stat-label">Health:</div>
+                        <div class="stat-value" id="enemy-health">30/30</div>
+                    </div>
+                    <div class="health-bar">
+                        <div id="enemy-health-bar" class="health-bar-fill" style="width: 100%"></div>
+                    </div>
+                    
+                    <div class="stat-row">
+                        <div class="stat-label">Level:</div>
+                        <div class="stat-value" id="enemy-level">1</div>
+                    </div>
                 </div>
             </div>
         </div>
+        
+        <!-- Shop Container -->
+        <div id="shop-container" class="panel" style="display: none;">
+            <div class="shop-header">
+                <h2>Mage Tower Shop</h2>
+                <div class="shop-gold">
+                    <span id="shop-player-gold">0</span>
+                </div>
+                <button id="close-shop">Close Shop</button>
+            </div>
+            
+            <div class="shop-section">
+                <h3>Potions</h3>
+                <div id="potions-container" class="shop-items">
+                    <!-- Potion items will be populated here -->
+                </div>
+            </div>
+            
+            <div class="shop-section">
+                <h3>Equipment</h3>
+                <div id="equipment-container" class="shop-items">
+                    <!-- Equipment items will be populated here -->
+                </div>
+            </div>
+            
+            <div class="shop-section">
+                <h3>Skills</h3>
+                <div id="skills-container" class="shop-items">
+                    <!-- Skill items will be populated here -->
+                </div>
+            </div>
+            
+            <div id="shop-message"></div>
+        </div>
     </div>
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Define Supabase credentials in the global scope so game.js can access them
+        // Define Supabase credentials in the global scope
         window.SUPABASE_URL = 'https://lhkvzwsdidulwulghebk.supabase.co';
         window.SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3Z6d3NkaWR1bHd1bGdoZWJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMTQ5OTksImV4cCI6MjA1Njc5MDk5OX0.lz3Pch5hBBO2Ug_iI5f2jMGV4Xwqt8t4RcPrn4_EzPw';
         
         // DOM elements
+        const authFormContainer = document.getElementById('auth-form-container');
         const authForm = document.getElementById('auth-form');
         const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('password');
@@ -84,7 +204,7 @@
             try {
                 authMessage.textContent = 'Logging in...';
                 
-                // Create Supabase client instance when needed
+                // Create Supabase client instance
                 const supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
                 
                 const { data, error } = await supabase.auth.signInWithPassword({
@@ -99,20 +219,43 @@
                     authMessage.textContent = `Logged in successfully!`;
                     authMessage.style.color = '#4CAF50';
                     
-                    // Show game container
-                    document.getElementById('game-container').style.display = 'block';
-                    authForm.style.display = 'none';
+                    // Hide auth form, show game elements
+                    authFormContainer.style.display = 'none';
                     
-                    // Load game script
-                    const gameScript = document.createElement('script');
-                    gameScript.src = 'game.js';
-                    document.body.appendChild(gameScript);
+                    // Load module scripts
+                    loadModules();
                 }
             } catch (err) {
                 authMessage.textContent = `An error occurred: ${err.message}`;
                 authMessage.style.color = '#ff4444';
             }
         });
+        
+        // Load module scripts
+        function loadModules() {
+            const scripts = [
+                'monster.js',
+                'skills.js',
+                'player.js',
+                'progress.js',
+                'shop.js',
+                'game.js'
+            ];
+            
+            let loaded = 0;
+            
+            scripts.forEach(scriptName => {
+                const script = document.createElement('script');
+                script.src = scriptName;
+                script.onload = () => {
+                    loaded++;
+                    if (loaded === scripts.length) {
+                        console.log('All modules loaded');
+                    }
+                };
+                document.body.appendChild(script);
+            });
+        }
     </script>
 </body>
 </html>

@@ -1,89 +1,573 @@
+/* Base styles */
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Arial', sans-serif;
     background-color: #222;
     color: #fff;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh;
     margin: 0;
+    padding: 20px;
 }
 
 .container {
     display: flex;
-    gap: 20px;
+    flex-direction: column;
+    max-width: 1200px;
+    width: 100%;
 }
 
+/* Panel styles */
 .panel {
     background-color: #333;
     padding: 20px;
     border-radius: 10px;
-    width: 200px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 h2 {
     color: #6200ea;
     margin-top: 0;
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 1.5rem;
+}
+
+/* Game container layout */
+#game-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+}
+
+.player-stats {
+    flex: 1;
+    min-width: 200px;
+    max-width: 300px;
 }
 
 .combat-log {
-    width: 400px;
-    text-align: center;
+    flex: 2;
+    min-width: 300px;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
 }
 
-#log {
-    height: 200px;
-    overflow-y: auto;
-    background-color: #444;
-    padding: 10px;
-    margin-bottom: 10px;
-    border-radius: 5px;
-    text-align: left;
+.enemy-stats {
+    flex: 1;
+    min-width: 200px;
+    max-width: 300px;
 }
 
-button {
-    padding: 10px 20px;
-    background-color: #6200ea;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-button:disabled {
-    background-color: #666;
-    cursor: not-allowed;
-}
-.login-panel {
-    text-align: center;
-    padding: 20px;
-}
-
-.login-panel form {
+/* Player and enemy stats */
+.stats-container {
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
 
-.login-panel input {
-    padding: 5px;
-    margin-bottom: 5px;
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
 }
 
-.login-panel button {
+.stat-label {
+    font-weight: bold;
+    color: #aaa;
+}
+
+.stat-value {
+    font-weight: bold;
+}
+
+.health-bar, .mana-bar, .xp-bar, .progress-bar {
+    width: 100%;
+    height: 15px;
+    background-color: #444;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 5px;
+}
+
+.health-bar-fill, .mana-bar-fill, .xp-bar-fill, .progress-bar-fill {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.3s ease;
+}
+
+.health-bar-fill {
+    background-color: #4CAF50;
+}
+
+.health-bar-fill.warning {
+    background-color: #FFC107;
+}
+
+.health-bar-fill.critical {
+    background-color: #F44336;
+}
+
+.mana-bar-fill {
+    background-color: #2196F3;
+}
+
+.xp-bar-fill {
+    background-color: #9C27B0;
+}
+
+.progress-bar-fill {
+    background-color: #FF9800;
+}
+
+/* Character name */
+.character-name {
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #6200ea;
+}
+
+/* Combat log */
+#log {
+    height: 300px;
+    overflow-y: auto;
+    background-color: #444;
     padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    font-family: monospace;
+}
+
+#log p {
+    margin: 5px 0;
+    padding: 5px;
+    border-radius: 3px;
+}
+
+.log-info {
+    color: #fff;
+}
+
+.log-player-action {
+    color: #2196F3;
+    background-color: rgba(33, 150, 243, 0.1);
+}
+
+.log-monster-action {
+    color: #F44336;
+    background-color: rgba(244, 67, 54, 0.1);
+}
+
+.log-success {
+    color: #4CAF50;
+    background-color: rgba(76, 175, 80, 0.1);
+}
+
+.log-error {
+    color: #F44336;
+    background-color: rgba(244, 67, 54, 0.1);
+}
+
+.log-warning {
+    color: #FFC107;
+    background-color: rgba(255, 193, 7, 0.1);
+}
+
+.log-reward {
+    color: #FF9800;
+    background-color: rgba(255, 152, 0, 0.1);
+}
+
+.log-level-up, .log-upgrade {
+    color: #9C27B0;
+    background-color: rgba(156, 39, 176, 0.1);
+}
+
+.log-tower-advance {
+    color: #3F51B5;
+    background-color: rgba(63, 81, 181, 0.1);
+}
+
+.log-failure {
+    color: #F44336;
+    background-color: rgba(244, 67, 54, 0.2);
+    font-weight: bold;
+}
+
+/* Action buttons */
+#action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+}
+
+.action-button, .shop-button, .restart-button, button {
+    padding: 10px 15px;
     background-color: #6200ea;
     color: #fff;
     border: none;
     border-radius: 5px;
     cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
 }
 
-.login-panel button:hover {
-    background-color: #4500a3;
+.action-button:hover, .shop-button:hover, .restart-button:hover, button:hover {
+    background-color: #7c4dff;
+}
+
+.action-button:disabled, .shop-button:disabled, button:disabled {
+    background-color: #666;
+    cursor: not-allowed;
+}
+
+.shop-button {
+    background-color: #FF9800;
+}
+
+.shop-button:hover {
+    background-color: #FFA726;
+}
+
+.restart-button {
+    background-color: #F44336;
+    margin-top: 15px;
+}
+
+.restart-button:hover {
+    background-color: #EF5350;
+}
+
+.delete-button {
+    background-color: #F44336;
+}
+
+.delete-button:hover {
+    background-color: #EF5350;
+}
+
+/* Shop layout */
+#shop-container {
+    display: none;
+    flex-direction: column;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.shop-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.shop-gold {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: bold;
+    color: #FFD700;
+}
+
+.shop-gold:before {
+    content: "💰";
+}
+
+.shop-section {
+    margin-bottom: 30px;
+}
+
+.shop-section h3 {
+    color: #6200ea;
+    border-bottom: 1px solid #6200ea;
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+}
+
+.shop-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 15px;
+}
+
+.shop-item {
+    background-color: #444;
+    border-radius: 5px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.item-name {
+    font-weight: bold;
+    color: #6200ea;
+}
+
+.item-description {
+    color: #ccc;
+    font-size: 0.9rem;
+    flex-grow: 1;
+}
+
+.item-price {
+    color: #FFD700;
+    font-weight: bold;
+}
+
+#shop-message {
+    text-align: center;
+    margin-top: 20px;
+    font-weight: bold;
+    min-height: 1.5em;
+}
+
+/* Character selection */
+#character-select {
+    display: none;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.character-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.character-item {
+    background-color: #444;
+    border-radius: 5px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.character-name {
+    font-weight: bold;
+    color: #6200ea;
+    font-size: 1.2rem;
+}
+
+.character-info {
+    color: #ccc;
+}
+
+.create-form {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.create-form input {
+    flex-grow: 1;
+    padding: 8px;
+    border-radius: 5px;
+    border: none;
+    background-color: #555;
+    color: #fff;
+}
+
+.create-new {
+    border: 2px dashed #6200ea;
+    background-color: rgba(98, 0, 234, 0.1);
+}
+
+/* Highscore table */
+.highscore-section {
+    margin-top: 30px;
+}
+
+#highscore-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+#highscore-table th, #highscore-table td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #555;
+}
+
+#highscore-table th {
+    background-color: #444;
+    color: #6200ea;
+    font-weight: bold;
+}
+
+#highscore-table tr:nth-child(even) {
+    background-color: #3a3a3a;
+}
+
+/* Login panel */
+.login-panel {
+    text-align: center;
+    padding: 20px;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.login-panel form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.login-panel input {
+    padding: 10px;
+    border-radius: 5px;
+    border: none;
+    background-color: #444;
+    color: #fff;
 }
 
 #auth-message {
-    color: #ff4444;
-    margin-top: 10px;
+    margin-top: 15px;
+    color: #F44336;
+}
+
+/* Combat visualization */
+.combat-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.player-combat {
+    flex: 1;
+    text-align: left;
+}
+
+.enemy-combat {
+    flex: 1;
+    text-align: right;
+}
+
+.player-avatar, .enemy-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: #555;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.player-avatar {
+    margin-right: auto;
+    background-color: #3F51B5;
+}
+
+.enemy-avatar {
+    margin-left: auto;
+    background-color: #F44336;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
+    #game-container {
+        flex-direction: column;
+    }
+    
+    .player-stats, .enemy-stats, .combat-log {
+        max-width: 100%;
+    }
+    
+    .shop-items {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+}
+
+/* Animations */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.damage-animation {
+    animation: shake 0.5s ease-in-out;
+}
+
+.heal-animation {
+    animation: pulse 0.5s ease-in-out;
+}
+
+.new-monster-animation {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Tower information */
+.tower-info {
+    text-align: center;
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: rgba(255, 152, 0, 0.1);
+    border-radius: 5px;
+}
+
+.tower-level {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #FF9800;
+}
+
+/* Combat effects */
+.effect {
+    position: absolute;
+    pointer-events: none;
+    z-index: 10;
+    font-weight: bold;
+    animation: floatUp 1s ease-out forwards;
+}
+
+@keyframes floatUp {
+    0% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(-50px); opacity: 0; }
+}
+
+.effect.damage {
+    color: #F44336;
+}
+
+.effect.heal {
+    color: #4CAF50;
+}
+
+.effect.mana {
+    color: #2196F3;
+}
+
+.effect.critical {
+    font-size: 1.5em;
+    text-shadow: 0 0 5px rgba(255, 0, 0, 0.7);
 }
