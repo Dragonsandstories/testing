@@ -27,7 +27,7 @@
         </div>
 
         <!-- Character Select Panel -->
-        <div id="character-select" class="panel">
+        <div id="character-select" class="panel" style="display: none;">
             <h2>Character Selection</h2>
             <div id="character-list" class="character-list">
                 <!-- Character items will be populated here -->
@@ -222,8 +222,8 @@
                     // Hide auth form, show game elements
                     authFormContainer.style.display = 'none';
                     
-                    // Load module scripts
-                    loadModules();
+                    // Load module scripts in the correct order
+                    loadScriptsSequentially();
                 }
             } catch (err) {
                 authMessage.textContent = `An error occurred: ${err.message}`;
@@ -231,30 +231,37 @@
             }
         });
         
-        // Load module scripts
-        function loadModules() {
+        // Function to load scripts sequentially in the correct order
+        function loadScriptsSequentially() {
             const scripts = [
-                'monster.js',
                 'skills.js',
-                'player.js',
+                'monster.js',
                 'progress.js',
+                'player.js',
                 'shop.js',
                 'game.js'
             ];
             
-            let loaded = 0;
-            
-            scripts.forEach(scriptName => {
+            function loadScript(index) {
+                if (index >= scripts.length) {
+                    console.log('All modules loaded');
+                    return;
+                }
+                
                 const script = document.createElement('script');
-                script.src = scriptName;
-                script.onload = () => {
-                    loaded++;
-                    if (loaded === scripts.length) {
-                        console.log('All modules loaded');
-                    }
+                script.src = scripts[index];
+                script.onload = function() {
+                    loadScript(index + 1);
+                };
+                script.onerror = function() {
+                    console.error(`Error loading script: ${scripts[index]}`);
+                    loadScript(index + 1);
                 };
                 document.body.appendChild(script);
-            });
+            }
+            
+            // Start loading scripts in sequence
+            loadScript(0);
         }
     </script>
 </body>
