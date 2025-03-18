@@ -1,13 +1,44 @@
-// Get Supabase credentials from global scope
-const SUPABASE_URL = window.SUPABASE_URL || 'https://lhkvzwsdidulwulghebk.supabase.co';
-const SUPABASE_KEY = window.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3Z6d3NkaWR1bHd1bGdoZWJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMTQ5OTksImV4cCI6MjA1Njc5MDk5OX0.lz3Pch5hBBO2Ug_iI5f2jMGV4Xwqt8t4RcPrn4_EzPw';
-
-// Create Supabase client
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
 // Wait for DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM fully loaded in game.js');
+    
+    // Get Supabase credentials from global scope
+    const SUPABASE_URL = window.SUPABASE_URL || 'https://lhkvzwsdidulwulghebk.supabase.co';
+    const SUPABASE_KEY = window.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3Z6d3NkaWR1bHd1bGdoZWJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMTQ5OTksImV4cCI6MjA1Njc5MDk5OX0.lz3Pch5hBBO2Ug_iI5f2jMGV4Xwqt8t4RcPrn4_EzPw';
+
+    // Create Supabase client
+    console.log('Creating Supabase client...');
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    console.log('Supabase client created');
+
+    // Check if the required classes are available
+    if (typeof SkillsManager !== 'function') {
+        console.error('SkillsManager class is not defined. Check that skills.js is loaded properly.');
+        return;
+    }
+
+    if (typeof Monster !== 'function') {
+        console.error('Monster class is not defined. Check that monster.js is loaded properly.');
+        return;
+    }
+
+    if (typeof ProgressManager !== 'function') {
+        console.error('ProgressManager class is not defined. Check that progress.js is loaded properly.');
+        return;
+    }
+
+    if (typeof Player !== 'function' || typeof PlayerManager !== 'function') {
+        console.error('Player/PlayerManager classes are not defined. Check that player.js is loaded properly.');
+        return;
+    }
+
+    if (typeof Shop !== 'function') {
+        console.error('Shop class is not defined. Check that shop.js is loaded properly.');
+        return;
+    }
+
     // Initialize game managers
+    console.log('Initializing game managers...');
     const skillsManager = new SkillsManager();
     const playerManager = new PlayerManager(supabaseClient);
     const progressManager = new ProgressManager();
@@ -457,7 +488,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const savedPlayer = await playerManager.savePlayerCharacter(player);
             if (savedPlayer) {
                 player = savedPlayer;
-                console.log('Game saved');
+                console.log('Game saved successfully');
             }
         } catch (error) {
             console.error('Error saving game:', error);
@@ -469,7 +500,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!highscoreTableEl) return;
         
         try {
+            console.log('Loading highscores...');
             const highscores = await playerManager.getHighscores();
+            console.log(`Loaded ${highscores.length} highscores`);
             
             // Clear highscore table
             highscoreTableEl.innerHTML = '';
@@ -512,12 +545,14 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         } catch (error) {
             console.error('Error loading highscores:', error);
+            highscoreTableEl.innerHTML = '<tr><td colspan="5">Failed to load highscores</td></tr>';
         }
     }
 
     // Show character selection
     async function showCharacterSelect() {
         try {
+            console.log('Showing character selection screen');
             gameState = 'character_select';
             
             // Hide game and shop, show character select
@@ -526,43 +561,69 @@ document.addEventListener('DOMContentLoaded', function() {
             if (characterSelectEl) characterSelectEl.style.display = 'block';
             
             // Load existing characters
+            console.log('Loading player characters');
             const characters = await playerManager.getPlayerCharacters();
+            console.log(`Loaded ${characters.length} characters`);
             
             // Clear character list
             const characterListEl = getElement('character-list');
-            if (!characterListEl) return;
+            if (!characterListEl) {
+                console.error('Character list element not found');
+                return;
+            }
             
             characterListEl.innerHTML = '';
             
-            // Add existing characters
-            characters.forEach(character => {
+            // Create a test character if no characters exist
+            if (characters.length === 0) {
+                console.log('No characters found, creating test character option');
+                
                 const charEl = document.createElement('div');
                 charEl.className = 'character-item';
                 
                 const nameEl = document.createElement('div');
                 nameEl.className = 'character-name';
-                nameEl.textContent = character.name;
+                nameEl.textContent = 'Create Your First Character';
                 
                 const infoEl = document.createElement('div');
                 infoEl.className = 'character-info';
-                infoEl.textContent = `Level ${character.level} ${character.characterClass} - Tower Level ${character.towerLevel}`;
-                
-                const selectButton = document.createElement('button');
-                selectButton.textContent = 'Select';
-                selectButton.addEventListener('click', () => selectCharacter(character));
-                
-                const deleteButton = document.createElement('button');
-                deleteButton.textContent = 'Delete';
-                deleteButton.className = 'delete-button';
-                deleteButton.addEventListener('click', () => deleteCharacter(character.id));
+                infoEl.textContent = 'Start your adventure in the Mage Tower';
                 
                 charEl.appendChild(nameEl);
                 charEl.appendChild(infoEl);
-                charEl.appendChild(selectButton);
-                charEl.appendChild(deleteButton);
                 
                 characterListEl.appendChild(charEl);
-            });
+            } else {
+                // Add existing characters
+                characters.forEach(character => {
+                    const charEl = document.createElement('div');
+                    charEl.className = 'character-item';
+                    
+                    const nameEl = document.createElement('div');
+                    nameEl.className = 'character-name';
+                    nameEl.textContent = character.name;
+                    
+                    const infoEl = document.createElement('div');
+                    infoEl.className = 'character-info';
+                    infoEl.textContent = `Level ${character.level} ${character.characterClass} - Tower Level ${character.towerLevel}`;
+                    
+                    const selectButton = document.createElement('button');
+                    selectButton.textContent = 'Select';
+                    selectButton.addEventListener('click', () => selectCharacter(character));
+                    
+                    const deleteButton = document.createElement('button');
+                    deleteButton.textContent = 'Delete';
+                    deleteButton.className = 'delete-button';
+                    deleteButton.addEventListener('click', () => deleteCharacter(character.id));
+                    
+                    charEl.appendChild(nameEl);
+                    charEl.appendChild(infoEl);
+                    charEl.appendChild(selectButton);
+                    charEl.appendChild(deleteButton);
+                    
+                    characterListEl.appendChild(charEl);
+                });
+            }
             
             // Add "Create New" option if less than 3 characters
             if (characters.length < 3) {
@@ -598,16 +659,18 @@ document.addEventListener('DOMContentLoaded', function() {
             // Load highscores
             loadHighscores();
         } catch (error) {
-            console.error('Error loading characters:', error);
+            console.error('Error showing character selection:', error);
         }
     }
 
     // Select a character
     function selectCharacter(character) {
+        console.log(`Selecting character: ${character.name}`);
         player = character;
         
         // Initialize skills if needed
         if (!player.skills || player.skills.length === 0) {
+            console.log('Initializing skills for character');
             player.initializeSkills(skillsManager);
         }
         
@@ -637,6 +700,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         try {
+            console.log(`Creating new character: ${name}`);
             // Create new player
             const newPlayer = new Player(name.trim());
             
@@ -647,6 +711,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const savedPlayer = await playerManager.savePlayerCharacter(newPlayer);
             
             if (savedPlayer) {
+                console.log('Character saved successfully');
                 // Refresh character selection
                 showCharacterSelect();
             }
@@ -663,9 +728,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         try {
+            console.log(`Deleting character with ID: ${playerId}`);
             const result = await playerManager.deletePlayerCharacter(playerId);
             
             if (result) {
+                console.log('Character deleted successfully');
                 // Refresh character selection
                 showCharacterSelect();
             }
@@ -689,27 +756,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize event listeners
     function initEventListeners() {
+        console.log('Initializing event listeners');
         // Shop close button
         const closeShopButton = getElement('close-shop');
         if (closeShopButton) {
             closeShopButton.addEventListener('click', closeShop);
-        }
-        
-        // Character select back button
-        const backButton = getElement('back-to-character-select');
-        if (backButton) {
-            backButton.addEventListener('click', goToCharacterSelect);
+            console.log('Shop close button listener added');
         }
     }
 
     // Initialize the game
     async function initGame() {
         try {
+            console.log('Game initialization started');
+            
             // Initialize event listeners
             initEventListeners();
             
             // Show character selection
-            showCharacterSelect();
+            await showCharacterSelect();
+            
+            console.log('Game initialization completed');
         } catch (error) {
             console.error('Error initializing game:', error);
         }

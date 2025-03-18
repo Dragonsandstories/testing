@@ -8,8 +8,8 @@
 </head>
 <body>
     <div class="container">
-        <!-- Auth Panel -->
-        <div id="auth-form-container" class="panel login-panel">
+        <!-- Auth Panel - Shown by default -->
+        <div id="auth-form-container" class="panel login-panel" style="display: block;">
             <h2>Login or Register</h2>
             <form id="auth-form">
                 <div>
@@ -166,6 +166,11 @@
             <div id="shop-message"></div>
         </div>
     </div>
+
+    <script>
+        // Add this debug message to check if the HTML is loading properly
+        console.log("HTML document loaded successfully");
+    </script>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
@@ -206,6 +211,7 @@
                 
                 // Create Supabase client instance
                 const supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
+                console.log("Supabase client created");
                 
                 const { data, error } = await supabase.auth.signInWithPassword({
                     email: email,
@@ -215,9 +221,11 @@
                 if (error) {
                     authMessage.textContent = `Login error: ${error.message}`;
                     authMessage.style.color = '#ff4444';
+                    console.error("Login error:", error);
                 } else {
                     authMessage.textContent = `Logged in successfully!`;
                     authMessage.style.color = '#4CAF50';
+                    console.log("Login successful");
                     
                     // Hide auth form, show game elements
                     authFormContainer.style.display = 'none';
@@ -228,11 +236,13 @@
             } catch (err) {
                 authMessage.textContent = `An error occurred: ${err.message}`;
                 authMessage.style.color = '#ff4444';
+                console.error("Login process error:", err);
             }
         });
         
         // Function to load scripts sequentially in the correct order
         function loadScriptsSequentially() {
+            console.log("Loading scripts sequentially...");
             const scripts = [
                 'skills.js',
                 'monster.js',
@@ -251,6 +261,7 @@
                 const script = document.createElement('script');
                 script.src = scripts[index];
                 script.onload = function() {
+                    console.log(`Loaded script: ${scripts[index]}`);
                     loadScript(index + 1);
                 };
                 script.onerror = function() {
@@ -263,6 +274,17 @@
             // Start loading scripts in sequence
             loadScript(0);
         }
+        
+        // For testing only: provide a way to bypass login
+        // Remove or comment this in production
+        function bypassLogin() {
+            console.log("Bypassing login for testing");
+            authFormContainer.style.display = 'none';
+            loadScriptsSequentially();
+        }
+        
+        // Uncomment the next line to automatically bypass login for testing
+        // setTimeout(bypassLogin, 1000);
     </script>
 </body>
 </html>
