@@ -50,9 +50,9 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Supabase setup
-        const SUPABASE_URL = 'https://lhkvzwsdidulwulghebk.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3Z6d3NkaWR1bHd1bGdoZWJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMTQ5OTksImV4cCI6MjA1Njc5MDk5OX0.lz3Pch5hBBO2Ug_iI5f2jMGV4Xwqt8t4RcPrn4_EzPw';
+        // Define Supabase credentials in the global scope so game.js can access them
+        window.SUPABASE_URL = 'https://lhkvzwsdidulwulghebk.supabase.co';
+        window.SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3Z6d3NkaWR1bHd1bGdoZWJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMTQ5OTksImV4cCI6MjA1Njc5MDk5OX0.lz3Pch5hBBO2Ug_iI5f2jMGV4Xwqt8t4RcPrn4_EzPw';
         
         // DOM elements
         const authForm = document.getElementById('auth-form');
@@ -85,7 +85,7 @@
                 authMessage.textContent = 'Logging in...';
                 
                 // Create Supabase client instance when needed
-                const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                const supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
                 
                 const { data, error } = await supabase.auth.signInWithPassword({
                     email: email,

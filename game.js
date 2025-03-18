@@ -1,9 +1,10 @@
-// Supabase setup (replace with your Supabase URL and anon key)
-const SUPABASE_URL = 'https://lhkvzwsdidulwulghebk.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3Z6d3NkaWR1bHd1bGdoZWJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMTQ5OTksImV4cCI6MjA1Njc5MDk5OX0.lz3Pch5hBBO2Ug_iI5f2jMGV4Xwqt8t4RcPrn4_EzPw';
+// Check if Supabase URL and key are already defined
+// Use existing values if available, otherwise define them
+const SUPABASE_URL = window.SUPABASE_URL || 'https://lhkvzwsdidulwulghebk.supabase.co';
+const SUPABASE_KEY = window.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3Z6d3NkaWR1bHd1bGdoZWJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMTQ5OTksImV4cCI6MjA1Njc5MDk5OX0.lz3Pch5hBBO2Ug_iI5f2jMGV4Xwqt8t4RcPrn4_EzPw';
 
 // Create Supabase client - using the global supabase object
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // DOM elements - only get the elements related to the game functionality now
 const playerHealthEl = document.getElementById('player-health');
@@ -158,9 +159,9 @@ function attack() {
 // Submit highscore to Supabase
 async function submitHighscore() {
     try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user } } = await supabaseClient.auth.getUser();
         if (user) {
-            const { data, error } = await supabase.from('highscores').insert([
+            const { data, error } = await supabaseClient.from('highscores').insert([
                 { score: player.score, user_id: user.id }
             ]);
             if (error) {
