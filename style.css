@@ -54,7 +54,6 @@ button:disabled {
     background-color: #666;
     cursor: not-allowed;
 }
-<<<<<<< HEAD
 .login-panel {
     text-align: center;
     padding: 20px;
@@ -88,5 +87,3 @@ button:disabled {
     color: #ff4444;
     margin-top: 10px;
 }
-=======
->>>>>>> 7f01ec359489672834068b364e49ab2fc12cb20b
