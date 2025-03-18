@@ -5,6 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Roguelike Mage Tower - Login</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Import Supabase correctly -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Check what global Supabase variable is available
+        console.log("Available Supabase globals:", Object.keys(window).filter(key => key.toLowerCase().includes('supa')));
+        
+        // Create a global supabaseJs variable that points to whatever the library provides
+        window.supabaseJs = window.createClient || window.supabase || window.supabaseClient;
+        
+        // If none of those exist, try directly importing from the CDN
+        if (!window.supabaseJs) {
+            console.warn("Supabase client not detected, importing directly...");
+        }
+    </script>
 </head>
 <body>
     <div class="container">
@@ -48,7 +62,33 @@
             </div>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="game.js"></script>
+
+    <!-- Let's also update game.js directly -->
+    <script>
+        // Modern Supabase initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            // Define supabaseJs if it's not already defined
+            if (!window.supabaseJs) {
+                // Import the latest Supabase client directly using ES modules
+                const script = document.createElement('script');
+                script.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"; 
+                script.onload = function() {
+                    // This exposes 'supabase' as a global, which we can use
+                    window.supabaseJs = window.supabase;
+                    
+                    // Now load the game script
+                    const gameScript = document.createElement('script');
+                    gameScript.src = 'game.js';
+                    document.body.appendChild(gameScript);
+                };
+                document.head.appendChild(script);
+            } else {
+                // If supabaseJs is already defined, just load the game
+                const gameScript = document.createElement('script');
+                gameScript.src = 'game.js';
+                document.body.appendChild(gameScript);
+            }
+        });
+    </script>
 </body>
 </html>
