@@ -2,17 +2,10 @@
 const SUPABASE_URL = 'https://lhkvzwsdidulwulghebk.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3Z6d3NkaWR1bHd1bGdoZWJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMTQ5OTksImV4cCI6MjA1Njc5MDk5OX0.lz3Pch5hBBO2Ug_iI5f2jMGV4Xwqt8t4RcPrn4_EzPw';
 
-// Create Supabase client - using the correct global variable from the console
+// Create Supabase client - using the global supabase object
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// DOM elements
-const authForm = document.getElementById('auth-form');
-const emailInput = document.getElementById('email');
-const passwordInput = document.getElementById('password');
-const loginButton = document.getElementById('login-button');
-const registerButton = document.getElementById('register-button');
-const authMessage = document.getElementById('auth-message');
-const gameContainer = document.getElementById('game-container');
+// DOM elements - only get the elements related to the game functionality now
 const playerHealthEl = document.getElementById('player-health');
 const playerLevelEl = document.getElementById('player-level');
 const playerXpEl = document.getElementById('player-xp');
@@ -164,64 +157,28 @@ function attack() {
 
 // Submit highscore to Supabase
 async function submitHighscore() {
-    const user = supabase.auth.user();
-    if (user) {
-        const { data, error } = await supabase.from('highscores').insert([
-            { score: player.score, user_id: user.id }
-        ]);
-        if (error) {
-            console.error('Error submitting highscore:', error);
-            log('Failed to submit highscore.');
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+            const { data, error } = await supabase.from('highscores').insert([
+                { score: player.score, user_id: user.id }
+            ]);
+            if (error) {
+                console.error('Error submitting highscore:', error);
+                log('Failed to submit highscore.');
+            } else {
+                log(`Highscore of ${player.score} submitted!`);
+            }
         } else {
-            log(`Highscore of ${player.score} submitted!`);
+            log('You need to be logged in to submit a highscore.');
         }
-    } else {
-        log('You need to be logged in to submit a highscore.');
+    } catch (err) {
+        console.error('Error accessing user:', err);
+        log('Could not submit highscore due to authentication error.');
     }
 }
 
-// Authentication functions
-async function handleLogin(email, password) {
-    const { user, error } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password
-    });
-    if (error) {
-        authMessage.textContent = `Login error: ${error.message}`;
-    } else {
-        authMessage.textContent = `Logged in as ${user.email}!`;
-        gameContainer.style.display = 'block';
-        authForm.style.display = 'none';
-        updateUI();
-    }
-}
-
-async function handleRegister(email, password) {
-    const { user, error } = await supabase.auth.signUp({
-        email: email,
-        password: password
-    });
-    if (error) {
-        authMessage.textContent = `Registration error: ${error.message}`;
-    } else {
-        authMessage.textContent = `Registration successful! Check your email for confirmation.`;
-    }
-}
-
-// Event listeners
-authForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = emailInput.value;
-    const password = passwordInput.value;
-    await handleLogin(email, password);
-});
-
-registerButton.addEventListener('click', async () => {
-    const email = emailInput.value;
-    const password = passwordInput.value;
-    await handleRegister(email, password);
-});
-
+// Set up event listener for the attack button
 actionButton.addEventListener('click', attack);
 
 // Initial setup

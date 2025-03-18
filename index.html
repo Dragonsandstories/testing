@@ -5,20 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Roguelike Mage Tower - Login</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Import Supabase correctly -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        // Check what global Supabase variable is available
-        console.log("Available Supabase globals:", Object.keys(window).filter(key => key.toLowerCase().includes('supa')));
-        
-        // Create a global supabaseJs variable that points to whatever the library provides
-        window.supabaseJs = window.createClient || window.supabase || window.supabaseClient;
-        
-        // If none of those exist, try directly importing from the CDN
-        if (!window.supabaseJs) {
-            console.warn("Supabase client not detected, importing directly...");
-        }
-    </script>
 </head>
 <body>
     <div class="container">
@@ -62,31 +48,69 @@
             </div>
         </div>
     </div>
-
-    <!-- Let's also update game.js directly -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Modern Supabase initialization
-        document.addEventListener('DOMContentLoaded', function() {
-            // Define supabaseJs if it's not already defined
-            if (!window.supabaseJs) {
-                // Import the latest Supabase client directly using ES modules
-                const script = document.createElement('script');
-                script.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"; 
-                script.onload = function() {
-                    // This exposes 'supabase' as a global, which we can use
-                    window.supabaseJs = window.supabase;
+        // Supabase setup
+        const SUPABASE_URL = 'https://lhkvzwsdidulwulghebk.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3Z6d3NkaWR1bHd1bGdoZWJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMTQ5OTksImV4cCI6MjA1Njc5MDk5OX0.lz3Pch5hBBO2Ug_iI5f2jMGV4Xwqt8t4RcPrn4_EzPw';
+        
+        // DOM elements
+        const authForm = document.getElementById('auth-form');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const loginButton = document.getElementById('login-button');
+        const registerButton = document.getElementById('register-button');
+        const authMessage = document.getElementById('auth-message');
+        
+        // Modified Register button event: redirect to register page
+        registerButton.addEventListener('click', () => {
+            window.location.href = 'register.html';
+        });
+        
+        // Handle login
+        authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Get form values
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            
+            if (!email || !password) {
+                authMessage.textContent = 'Please enter both email and password';
+                authMessage.style.color = '#ff4444';
+                return;
+            }
+            
+            try {
+                authMessage.textContent = 'Logging in...';
+                
+                // Create Supabase client instance when needed
+                const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+                
+                if (error) {
+                    authMessage.textContent = `Login error: ${error.message}`;
+                    authMessage.style.color = '#ff4444';
+                } else {
+                    authMessage.textContent = `Logged in successfully!`;
+                    authMessage.style.color = '#4CAF50';
                     
-                    // Now load the game script
+                    // Show game container
+                    document.getElementById('game-container').style.display = 'block';
+                    authForm.style.display = 'none';
+                    
+                    // Load game script
                     const gameScript = document.createElement('script');
                     gameScript.src = 'game.js';
                     document.body.appendChild(gameScript);
-                };
-                document.head.appendChild(script);
-            } else {
-                // If supabaseJs is already defined, just load the game
-                const gameScript = document.createElement('script');
-                gameScript.src = 'game.js';
-                document.body.appendChild(gameScript);
+                }
+            } catch (err) {
+                authMessage.textContent = `An error occurred: ${err.message}`;
+                authMessage.style.color = '#ff4444';
             }
         });
     </script>

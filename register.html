@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roguelike Mage Tower - Register</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .register-panel {
+            width: 320px;
+            max-width: 90%;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        
+        .error-message {
+            color: #ff4444;
+            margin-top: 5px;
+            font-size: 0.9em;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .button-group button {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="panel register-panel">
+            <h2>Create Account</h2>
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required>
+                    <div id="email-error" class="error-message"></div>
+                </div>
+                <div class="form-group">
+                    <label for="confirm-email">Confirm Email:</label>
+                    <input type="email" id="confirm-email" name="confirm-email" required>
+                    <div id="confirm-email-error" class="error-message"></div>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required>
+                    <div id="password-error" class="error-message"></div>
+                </div>
+                <div class="form-group">
+                    <label for="confirm-password">Confirm Password:</label>
+                    <input type="password" id="confirm-password" name="confirm-password" required>
+                    <div id="confirm-password-error" class="error-message"></div>
+                </div>
+                <div class="button-group">
+                    <button type="button" id="cancel-button">Cancel</button>
+                    <button type="submit" id="submit-button">Register</button>
+                </div>
+                <p id="register-message"></p>
+            </form>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Supabase setup
+        const SUPABASE_URL = 'https://lhkvzwsdidulwulghebk.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3Z6d3NkaWR1bHd1bGdoZWJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMTQ5OTksImV4cCI6MjA1Njc5MDk5OX0.lz3Pch5hBBO2Ug_iI5f2jMGV4Xwqt8t4RcPrn4_EzPw';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        // DOM elements
+        const registerForm = document.getElementById('register-form');
+        const emailInput = document.getElementById('email');
+        const confirmEmailInput = document.getElementById('confirm-email');
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirm-password');
+        const emailError = document.getElementById('email-error');
+        const confirmEmailError = document.getElementById('confirm-email-error');
+        const passwordError = document.getElementById('password-error');
+        const confirmPasswordError = document.getElementById('confirm-password-error');
+        const registerMessage = document.getElementById('register-message');
+        const cancelButton = document.getElementById('cancel-button');
+        
+        // Validation functions
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+        
+        function validatePassword(password) {
+            return password.length >= 6;
+        }
+        
+        // Form submission
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Reset error messages
+            emailError.textContent = '';
+            confirmEmailError.textContent = '';
+            passwordError.textContent = '';
+            confirmPasswordError.textContent = '';
+            
+            // Get form values
+            const email = emailInput.value.trim();
+            const confirmEmail = confirmEmailInput.value.trim();
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+            
+            // Validate email
+            if (!validateEmail(email)) {
+                emailError.textContent = 'Please enter a valid email address';
+                return;
+            }
+            
+            // Validate email confirmation
+            if (email !== confirmEmail) {
+                confirmEmailError.textContent = 'Emails do not match';
+                return;
+            }
+            
+            // Validate password
+            if (!validatePassword(password)) {
+                passwordError.textContent = 'Password must be at least 6 characters';
+                return;
+            }
+            
+            // Validate password confirmation
+            if (password !== confirmPassword) {
+                confirmPasswordError.textContent = 'Passwords do not match';
+                return;
+            }
+            
+            // Submit to Supabase
+            try {
+                registerMessage.textContent = 'Registering...';
+                
+                const { user, error } = await supabase.auth.signUp({
+                    email: email,
+                    password: password
+                });
+                
+                if (error) {
+                    registerMessage.textContent = `Registration error: ${error.message}`;
+                    registerMessage.style.color = '#ff4444';
+                } else {
+                    registerMessage.textContent = 'Registration successful! Check your email for confirmation.';
+                    registerMessage.style.color = '#4CAF50';
+                    
+                    // Disable inputs after successful registration
+                    emailInput.disabled = true;
+                    confirmEmailInput.disabled = true;
+                    passwordInput.disabled = true;
+                    confirmPasswordInput.disabled = true;
+                    
+                    // Redirect back to login page after 3 seconds
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 3000);
+                }
+            } catch (err) {
+                registerMessage.textContent = `An error occurred: ${err.message}`;
+                registerMessage.style.color = '#ff4444';
+            }
+        });
+        
+        // Cancel button
+        cancelButton.addEventListener('click', () => {
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>
