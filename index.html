@@ -401,5 +401,346 @@
             loadScript(0);
         }
     </script>
+    <script>
+        // Direct character display fix
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log("Running direct character display fix");
+            
+            // Wait for a bit to ensure other scripts have loaded
+            setTimeout(async function() {
+                try {
+                    // Check if user is logged in
+                    const supabase = window.supabase.createClient(
+                        window.SUPABASE_URL || 'https://lhkvzwsdidulwulghebk.supabase.co',
+                        window.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3Z6d3NkaWR1bHd1bGdoZWJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMTQ5OTksImV4cCI6MjA1Njc5MDk5OX0.lz3Pch5hBBO2Ug_iI5f2jMGV4Xwqt8t4RcPrn4_EzPw'
+                    );
+                    
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (!user) {
+                        console.log("User not logged in, skipping character load");
+                        return;
+                    }
+                    
+                    console.log("User logged in, loading characters directly");
+                    
+                    // Add logout button
+                    addEmergencyLogoutButton();
+                    
+                    // Directly load characters from Supabase
+                    await loadCharactersDirectly(supabase, user.id);
+                } catch (error) {
+                    console.error("Error in direct character fix:", error);
+                }
+            }, 1000); // Wait 1 second for everything to load
+        });
+        
+        // Add emergency logout button
+        function addEmergencyLogoutButton() {
+            if (document.getElementById('emergency-logout-btn')) return;
+            
+            const logoutBtn = document.createElement('button');
+            logoutBtn.id = 'emergency-logout-btn';
+            logoutBtn.textContent = 'Logout';
+            logoutBtn.style.position = 'fixed';
+            logoutBtn.style.top = '10px';
+            logoutBtn.style.right = '10px';
+            logoutBtn.style.zIndex = '10000';
+            logoutBtn.style.padding = '8px 15px';
+            logoutBtn.style.backgroundColor = '#F44336';
+            logoutBtn.style.color = 'white';
+            logoutBtn.style.border = 'none';
+            logoutBtn.style.borderRadius = '4px';
+            logoutBtn.style.cursor = 'pointer';
+            
+            logoutBtn.addEventListener('click', async function() {
+                if (confirm('Are you sure you want to logout?')) {
+                    const supabase = window.supabase.createClient(
+                        window.SUPABASE_URL || 'https://lhkvzwsdidulwulghebk.supabase.co',
+                        window.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3Z6d3NkaWR1bHd1bGdoZWJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMTQ5OTksImV4cCI6MjA1Njc5MDk5OX0.lz3Pch5hBBO2Ug_iI5f2jMGV4Xwqt8t4RcPrn4_EzPw'
+                    );
+                    await supabase.auth.signOut();
+                    alert('Logged out successfully');
+                    window.location.reload();
+                }
+            });
+            
+            document.body.appendChild(logoutBtn);
+            console.log("Emergency logout button added");
+        }
+        
+        // Load characters directly from Supabase
+        async function loadCharactersDirectly(supabase, userId) {
+            try {
+                // Get character list container
+                const characterListEl = document.getElementById('character-list');
+                if (!characterListEl) {
+                    console.error("Character list element not found");
+                    return;
+                }
+                
+                // Clear any previous content except create new option
+                const createNewOption = characterListEl.querySelector('.create-new');
+                characterListEl.innerHTML = '';
+                
+                // Fetch characters directly from Supabase
+                const { data, error } = await supabase
+                    .from('characters')
+                    .select('*')
+                    .eq('user_id', userId);
+                
+                if (error) {
+                    console.error("Error fetching characters:", error);
+                    return;
+                }
+                
+                console.log("Successfully loaded characters:", data.length);
+                
+                if (data && data.length > 0) {
+                    // Process each character
+                    data.forEach(character => {
+                        // Create character element
+                        const charEl = document.createElement('div');
+                        charEl.className = 'character-item';
+                        charEl.setAttribute('data-id', character.id);
+                        charEl.style.backgroundColor = '#444';
+                        charEl.style.borderRadius = '8px';
+                        charEl.style.padding = '15px';
+                        charEl.style.marginBottom = '15px';
+                        charEl.style.display = 'block';
+                        
+                        // Set character content
+                        charEl.innerHTML = `
+                            <div class="character-name" style="color: #6200ea; font-weight: bold; font-size: 1.2rem; margin-bottom: 5px;">${character.name}</div>
+                            <div class="character-info" style="color: #ccc; margin-bottom: 10px;">
+                                Level ${character.level} ${character.character_class} - Tower Level ${character.tower_level}
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="select-button" data-id="${character.id}" style="flex: 1; padding: 8px; background-color: #6200ea; color: white; border: none; border-radius: 5px; cursor: pointer;">Select</button>
+                                <button class="delete-button" data-id="${character.id}" style="flex: 1; padding: 8px; background-color: #F44336; color: white; border: none; border-radius: 5px; cursor: pointer;">Delete</button>
+                            </div>
+                        `;
+                        
+                        // Add to character list
+                        characterListEl.appendChild(charEl);
+                        
+                        // Add event listeners
+                        const selectBtn = charEl.querySelector('.select-button');
+                        const deleteBtn = charEl.querySelector('.delete-button');
+                        
+                        if (selectBtn) {
+                            selectBtn.addEventListener('click', function() {
+                                selectCharacterDirectly(character, supabase);
+                            });
+                        }
+                        
+                        if (deleteBtn) {
+                            deleteBtn.addEventListener('click', function() {
+                                deleteCharacterDirectly(character.id, supabase);
+                            });
+                        }
+                    });
+                    
+                    // If we have characters, add the create new option at the end
+                    if (createNewOption) {
+                        characterListEl.appendChild(createNewOption);
+                    }
+                } else {
+                    // No characters found, just add back the create new option
+                    if (createNewOption) {
+                        characterListEl.appendChild(createNewOption);
+                    } else {
+                        // Create new character option doesn't exist, create it
+                        createNewCharacterOption(characterListEl, supabase, userId);
+                    }
+                }
+            } catch (error) {
+                console.error("Error loading characters directly:", error);
+            }
+        }
+        
+        // Create new character option
+        function createNewCharacterOption(containerEl, supabase, userId) {
+            if (!containerEl) return;
+            
+            // Create element
+            const createEl = document.createElement('div');
+            createEl.className = 'character-item create-new';
+            createEl.style.backgroundColor = '#4a148c';
+            createEl.style.border = '2px dashed #9c27b0';
+            createEl.style.padding = '15px';
+            createEl.style.marginBottom = '15px';
+            createEl.style.display = 'block';
+            
+            // Set content
+            createEl.innerHTML = `
+                <div class="character-name" style="color: white; font-weight: bold; font-size: 1.2rem; margin-bottom: 5px;">Create New Character</div>
+                <div class="create-form" style="display: block; margin-top: 10px;">
+                    <input type="text" id="direct-char-name" placeholder="Character Name" required maxlength="20" style="width: 100%; padding: 8px; margin-bottom: 10px; background-color: #333; color: white; border: 1px solid #666; border-radius: 4px;">
+                    <button id="direct-create-btn" style="width: 100%; padding: 8px; background-color: #6200ea; color: white; border: none; border-radius: 5px; cursor: pointer;">Create Character</button>
+                </div>
+            `;
+            
+            // Add to container
+            containerEl.appendChild(createEl);
+            
+            // Add event listener
+            const createBtn = document.getElementById('direct-create-btn');
+            if (createBtn) {
+                createBtn.addEventListener('click', function() {
+                    const nameInput = document.getElementById('direct-char-name');
+                    if (nameInput && nameInput.value.trim()) {
+                        createCharacterDirectly(nameInput.value.trim(), supabase, userId);
+                    } else {
+                        alert('Please enter a character name');
+                    }
+                });
+            }
+        }
+        
+        // Create character directly
+        async function createCharacterDirectly(name, supabase, userId) {
+            try {
+                if (!name || name.trim() === '') {
+                    alert('Please enter a character name');
+                    return;
+                }
+                
+                console.log(`Creating character directly: ${name}`);
+                
+                // Create character data
+                const characterData = {
+                    name: name,
+                    user_id: userId,
+                    character_class: 'Mage',
+                    level: 1,
+                    xp: 0,
+                    xp_to_next_level: 100,
+                    health: 100,
+                    max_health: 100,
+                    mana: 50,
+                    max_mana: 50,
+                    gold: 0,
+                    score: 0,
+                    tower_level: 1,
+                    strength: 5,
+                    intelligence: 10,
+                    vitality: 5,
+                    agility: 5,
+                    skills: JSON.stringify([
+                        {
+                            name: 'Fireball',
+                            type: 'fire',
+                            damage: 10,
+                            manaCost: 5,
+                            description: 'A basic ball of fire'
+                        },
+                        {
+                            name: 'Ice Shard',
+                            type: 'ice',
+                            damage: 8,
+                            manaCost: 4,
+                            description: 'A sharp shard of ice'
+                        }
+                    ]),
+                    equipment: JSON.stringify({})
+                };
+                
+                // Insert into database
+                const { data, error } = await supabase
+                    .from('characters')
+                    .insert([characterData])
+                    .select();
+                
+                if (error) {
+                    console.error('Error creating character directly:', error);
+                    alert(`Error creating character: ${error.message}`);
+                    return;
+                }
+                
+                console.log('Character created successfully:', data);
+                alert(`Character "${name}" created successfully!`);
+                
+                // Reload characters
+                loadCharactersDirectly(supabase, userId);
+            } catch (error) {
+                console.error('Error in createCharacterDirectly:', error);
+                alert(`Failed to create character: ${error.message}`);
+            }
+        }
+        
+        // Select character directly
+        async function selectCharacterDirectly(character, supabase) {
+            try {
+                console.log(`Selecting character directly: ${character.name}`);
+                
+                // This will store selected character ID in localStorage
+                localStorage.setItem('selectedCharacterId', character.id);
+                
+                // Hide character select, show game container
+                const characterSelectEl = document.getElementById('character-select');
+                const gameContainerEl = document.getElementById('game-container');
+                
+                if (characterSelectEl) characterSelectEl.style.display = 'none';
+                if (gameContainerEl) {
+                    gameContainerEl.style.display = 'flex';
+                    
+                    // Attempt to trigger game initialization
+                    // This is a bit of a hack, but it should work to force the game to load the character
+                    const gameEvent = new CustomEvent('gameStart', { detail: { characterId: character.id } });
+                    document.dispatchEvent(gameEvent);
+                    
+                    alert(`Character "${character.name}" selected. Starting game...`);
+                    window.location.reload(); // Force reload as fallback
+                } else {
+                    // If game container doesn't exist, just reload the page
+                    alert(`Character "${character.name}" selected. Refreshing page...`);
+                    window.location.reload();
+                }
+            } catch (error) {
+                console.error('Error selecting character directly:', error);
+                alert(`Error selecting character: ${error.message}`);
+            }
+        }
+        
+        // Delete character directly
+        async function deleteCharacterDirectly(characterId, supabase) {
+            try {
+                if (!confirm('Are you sure you want to delete this character? This cannot be undone.')) {
+                    return;
+                }
+                
+                console.log(`Deleting character directly: ${characterId}`);
+                
+                // Delete from database
+                const { error } = await supabase
+                    .from('characters')
+                    .delete()
+                    .eq('id', characterId);
+                
+                if (error) {
+                    console.error('Error deleting character directly:', error);
+                    alert(`Error deleting character: ${error.message}`);
+                    return;
+                }
+                
+                console.log('Character deleted successfully');
+                alert('Character deleted successfully');
+                
+                // Get user ID
+                const { data: { user } } = await supabase.auth.getUser();
+                
+                // Reload characters
+                if (user) {
+                    loadCharactersDirectly(supabase, user.id);
+                } else {
+                    // If no user, reload page
+                    window.location.reload();
+                }
+            } catch (error) {
+                console.error('Error in deleteCharacterDirectly:', error);
+                alert(`Failed to delete character: ${error.message}`);
+            }
+        }
+        </script>
 </body>
 </html>
