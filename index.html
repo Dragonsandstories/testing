@@ -5,11 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Roguelike Mage Tower</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Critical overrides to ensure visibility */
+        #character-select {
+            display: block !important;
+            z-index: 1000 !important;
+        }
+        .character-item {
+            display: block !important;
+            margin-bottom: 15px !important;
+        }
+        #game-container, #shop-container {
+            display: none;
+        }
+        .create-new {
+            background-color: #4a148c !important;
+            border: 2px dashed #9c27b0 !important;
+            padding: 15px !important;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <!-- Auth Panel - Shown by default -->
-        <div id="auth-form-container" class="panel login-panel" style="display: block;">
+        <div id="auth-form-container" class="panel login-panel">
             <h2>Login or Register</h2>
             <form id="auth-form">
                 <div>
@@ -27,10 +46,17 @@
         </div>
 
         <!-- Character Select Panel -->
-        <div id="character-select" class="panel" style="display: none;">
+        <div id="character-select" class="panel">
             <h2>Character Selection</h2>
             <div id="character-list" class="character-list">
                 <!-- Character items will be populated here -->
+                <div class="character-item create-new">
+                    <div class="character-name" style="color: white !important;">Create New Character</div>
+                    <div class="create-form" style="display: block !important;">
+                        <input type="text" id="new-char-name" placeholder="Character Name" required maxlength="20">
+                        <button id="create-char-btn">Create Character</button>
+                    </div>
+                </div>
             </div>
             <div class="highscore-section">
                 <h3>Highscores</h3>
@@ -41,7 +67,7 @@
         </div>
 
         <!-- Game Container -->
-        <div id="game-container" style="display: none;">
+        <div id="game-container">
             <div class="panel player-stats">
                 <div class="character-name" id="player-name">Player</div>
                 <div class="stats-container">
@@ -133,7 +159,7 @@
         </div>
         
         <!-- Shop Container -->
-        <div id="shop-container" class="panel" style="display: none;">
+        <div id="shop-container" class="panel">
             <div class="shop-header">
                 <h2>Mage Tower Shop</h2>
                 <div class="shop-gold">
@@ -142,61 +168,73 @@
                 <button id="close-shop">Close Shop</button>
             </div>
             
-            <div class="shop-section">
-                <h3>Potions</h3>
-                <div id="potions-container" class="shop-items">
-                    <!-- Potion items will be populated here -->
-                </div>
-            </div>
-            
-            <div class="shop-section">
-                <h3>Equipment</h3>
-                <div id="equipment-container" class="shop-items">
-                    <!-- Equipment items will be populated here -->
-                </div>
-            </div>
-            
-            <div class="shop-section">
-                <h3>Skills</h3>
-                <div id="skills-container" class="shop-items">
-                    <!-- Skill items will be populated here -->
-                </div>
+            <div id="shop-sections">
+                <!-- Shop sections will be populated by JS -->
             </div>
             
             <div id="shop-message"></div>
         </div>
+
+        <!-- Emergency Character Creation (always visible as fallback) -->
+        <div id="emergency-character-creator" style="position: fixed; bottom: 20px; right: 20px; background-color: #333; color: white; padding: 15px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.5); z-index: 10000; display: none;">
+            <h3 style="color: #6200ea; margin-top: 0;">Emergency Character Creation</h3>
+            <input type="text" id="emergency-char-name" placeholder="Character Name" style="width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box; background-color: #444; color: white; border: none; border-radius: 3px;">
+            <button id="emergency-create-btn" style="width: 100%; padding: 8px; background-color: #6200ea; color: white; border: none; border-radius: 3px; cursor: pointer;">Create Character</button>
+        </div>
     </div>
 
-    <script>
-        // Add this debug message to check if the HTML is loading properly
-        console.log("HTML document loaded successfully");
-    </script>
-    
+    <!-- First load critical scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
+        // Debug message
+        console.log("HTML document loaded successfully");
+        
         // Define Supabase credentials in the global scope
         window.SUPABASE_URL = 'https://lhkvzwsdidulwulghebk.supabase.co';
         window.SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3Z6d3NkaWR1bHd1bGdoZWJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMTQ5OTksImV4cCI6MjA1Njc5MDk5OX0.lz3Pch5hBBO2Ug_iI5f2jMGV4Xwqt8t4RcPrn4_EzPw';
         
-        // DOM elements
-        const authFormContainer = document.getElementById('auth-form-container');
+        // Check login status immediately
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                // Create Supabase client
+                const supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
+                console.log("Checking login status...");
+                
+                // Check if user is logged in
+                const { data: { user } } = await supabase.auth.getUser();
+                
+                if (user) {
+                    console.log("User is logged in:", user.email);
+                    // Hide auth form, show character select
+                    document.getElementById('auth-form-container').style.display = 'none';
+                    document.getElementById('character-select').style.display = 'block';
+                    
+                    // Load scripts after confirming login
+                    loadGameScripts();
+                    
+                    // Show emergency creator after a delay as fallback
+                    setTimeout(() => {
+                        document.getElementById('emergency-character-creator').style.display = 'block';
+                    }, 5000);
+                } else {
+                    console.log("User is not logged in");
+                    document.getElementById('auth-form-container').style.display = 'block';
+                    document.getElementById('character-select').style.display = 'none';
+                }
+            } catch (error) {
+                console.error("Error checking login:", error);
+            }
+        });
+        
+        // Handle login form
         const authForm = document.getElementById('auth-form');
         const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('password');
-        const loginButton = document.getElementById('login-button');
-        const registerButton = document.getElementById('register-button');
         const authMessage = document.getElementById('auth-message');
         
-        // Modified Register button event: redirect to register page
-        registerButton.addEventListener('click', () => {
-            window.location.href = 'register.html';
-        });
-        
-        // Handle login
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // Get form values
             const email = emailInput.value.trim();
             const password = passwordInput.value;
             
@@ -209,9 +247,8 @@
             try {
                 authMessage.textContent = 'Logging in...';
                 
-                // Create Supabase client instance
+                // Create Supabase client
                 const supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
-                console.log("Supabase client created");
                 
                 const { data, error } = await supabase.auth.signInWithPassword({
                     email: email,
@@ -221,28 +258,117 @@
                 if (error) {
                     authMessage.textContent = `Login error: ${error.message}`;
                     authMessage.style.color = '#ff4444';
-                    console.error("Login error:", error);
                 } else {
-                    authMessage.textContent = `Logged in successfully!`;
+                    authMessage.textContent = 'Logged in successfully!';
                     authMessage.style.color = '#4CAF50';
-                    console.log("Login successful");
                     
-                    // Hide auth form, show game elements
-                    authFormContainer.style.display = 'none';
+                    // Hide auth form, show character select
+                    document.getElementById('auth-form-container').style.display = 'none';
+                    document.getElementById('character-select').style.display = 'block';
                     
-                    // Load module scripts in the correct order
-                    loadScriptsSequentially();
+                    // Load scripts after login
+                    loadGameScripts();
                 }
             } catch (err) {
                 authMessage.textContent = `An error occurred: ${err.message}`;
                 authMessage.style.color = '#ff4444';
-                console.error("Login process error:", err);
             }
         });
         
-        // Function to load scripts sequentially in the correct order
-        function loadScriptsSequentially() {
-            console.log("Loading scripts sequentially...");
+        // Register button
+        document.getElementById('register-button').addEventListener('click', () => {
+            window.location.href = 'register.html';
+        });
+        
+        // Emergency character creation
+        document.getElementById('emergency-create-btn').addEventListener('click', async () => {
+            const nameInput = document.getElementById('emergency-char-name');
+            if (nameInput && nameInput.value.trim()) {
+                await createCharacterDirectly(nameInput.value.trim());
+            } else {
+                alert('Please enter a character name');
+            }
+        });
+        
+        // Direct character creation function
+        async function createCharacterDirectly(name) {
+            try {
+                const supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
+                
+                // Get current user
+                const { data: { user } } = await supabase.auth.getUser();
+                
+                if (!user) {
+                    alert("You must be logged in to create a character");
+                    return;
+                }
+                
+                // Create basic character data
+                const characterData = {
+                    name: name,
+                    user_id: user.id,
+                    character_class: 'Mage',
+                    level: 1,
+                    xp: 0,
+                    xp_to_next_level: 100,
+                    health: 100,
+                    max_health: 100,
+                    mana: 50,
+                    max_mana: 50,
+                    gold: 0,
+                    score: 0,
+                    tower_level: 1,
+                    strength: 5,
+                    intelligence: 10,
+                    vitality: 5,
+                    agility: 5,
+                    skills: JSON.stringify([
+                        {
+                            name: 'Fireball',
+                            type: 'fire',
+                            damage: 10,
+                            manaCost: 5,
+                            description: 'A basic ball of fire'
+                        },
+                        {
+                            name: 'Ice Shard',
+                            type: 'ice',
+                            damage: 8,
+                            manaCost: 4,
+                            description: 'A sharp shard of ice'
+                        }
+                    ]),
+                    equipment: JSON.stringify({})
+                };
+                
+                // Insert directly into Supabase
+                const { data, error } = await supabase
+                    .from('characters')
+                    .insert([characterData])
+                    .select();
+                
+                if (error) {
+                    console.error('Error creating character:', error);
+                    alert(`Error creating character: ${error.message}`);
+                    return;
+                }
+                
+                alert(`Character "${name}" created successfully! Refreshing page...`);
+                
+                // Refresh the page after a short delay
+                setTimeout(function() {
+                    window.location.reload();
+                }, 1500);
+                
+            } catch (error) {
+                console.error('Error in createCharacterDirectly:', error);
+                alert('Failed to create character. See console for details.');
+            }
+        }
+        
+        // Function to load game scripts in sequence
+        function loadGameScripts() {
+            console.log("Loading game scripts sequentially...");
             const scripts = [
                 'skills.js',
                 'monster.js',
@@ -254,7 +380,7 @@
             
             function loadScript(index) {
                 if (index >= scripts.length) {
-                    console.log('All modules loaded');
+                    console.log('All game scripts loaded successfully');
                     return;
                 }
                 
@@ -274,17 +400,6 @@
             // Start loading scripts in sequence
             loadScript(0);
         }
-        
-        // For testing only: provide a way to bypass login
-        // Remove or comment this in production
-        function bypassLogin() {
-            console.log("Bypassing login for testing");
-            authFormContainer.style.display = 'none';
-            loadScriptsSequentially();
-        }
-        
-        // Uncomment the next line to automatically bypass login for testing
-        // setTimeout(bypassLogin, 1000);
     </script>
 </body>
 </html>

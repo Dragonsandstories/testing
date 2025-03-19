@@ -1,4 +1,10 @@
-/* Base styles */
+/* Improved style.css - focuses on reliable display and functionality */
+
+/* ================ Reset and Base Styles ================ */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
 body {
     font-family: 'Arial', sans-serif;
     background-color: #222;
@@ -11,36 +17,173 @@ body {
     padding: 20px;
 }
 
+/* Ensure container is always visible */
 .container {
     display: flex;
     flex-direction: column;
     max-width: 1200px;
     width: 100%;
+    position: relative;
+    z-index: 1;
 }
 
-/* Panel styles */
+/* ================ Panel Styles ================ */
 .panel {
     background-color: #333;
     padding: 20px;
     border-radius: 10px;
     margin-bottom: 20px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    position: relative;
+    z-index: 2;
 }
 
-h2 {
+h1, h2, h3, h4, h5, h6 {
     color: #6200ea;
     margin-top: 0;
     margin-bottom: 15px;
     text-align: center;
+}
+
+h2 {
     font-size: 1.5rem;
 }
 
-/* Game container layout */
+/* ================ Authentication Panel ================ */
+.login-panel {
+    text-align: center;
+    padding: 20px;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.login-panel form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.login-panel input {
+    padding: 10px;
+    border-radius: 5px;
+    border: none;
+    background-color: #444;
+    color: #fff;
+    width: 100%;
+}
+
+#auth-message {
+    margin-top: 15px;
+    min-height: 20px;
+}
+
+/* ================ Character Selection ================ */
+#character-select {
+    display: block !important; /* Ensure character select is always visible when needed */
+    max-width: 600px;
+    margin: 0 auto;
+    z-index: 10 !important;
+}
+
+.character-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 5px;
+}
+
+.character-item {
+    background-color: #444;
+    border-radius: 8px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: block !important; /* Ensure character items are always visible */
+    margin-bottom: 10px;
+}
+
+.character-item:hover {
+    background-color: #555;
+    transform: translateY(-2px);
+}
+
+/* Ensure create new character option is always visible and prominent */
+.character-item.create-new {
+    background-color: #4a148c !important;
+    border: 2px dashed #9c27b0 !important;
+    display: block !important;
+    position: relative !important;
+    z-index: 1000 !important;
+    margin: 10px auto !important;
+    max-width: 500px !important;
+    padding: 15px !important;
+    cursor: pointer !important;
+    text-align: center !important;
+}
+
+.character-item.create-new .character-name {
+    color: #ffffff !important;
+    font-size: 1.5rem !important;
+    text-align: center !important;
+    font-weight: bold !important;
+    margin-bottom: 15px !important;
+}
+
+.character-item.create-new .create-form {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    margin-top: 10px !important;
+}
+
+.character-item.create-new .create-form input {
+    padding: 8px !important;
+    border-radius: 4px !important;
+    border: 1px solid #666 !important;
+    background-color: #333 !important;
+    color: #fff !important;
+    width: 100% !important;
+    display: block !important;
+}
+
+.character-item.create-new .create-form button {
+    padding: 8px 15px !important;
+    background-color: #6200ea !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    font-weight: bold !important;
+    width: 100% !important;
+    display: block !important;
+}
+
+.character-item.create-new .create-form button:hover {
+    background-color: #7c4dff !important;
+}
+
+.character-name {
+    font-weight: bold;
+    color: #6200ea;
+    font-size: 1.2rem;
+    margin-bottom: 5px;
+}
+
+.character-info {
+    color: #ccc;
+    margin-bottom: 10px;
+}
+
+/* ================ Game Container Layout ================ */
 #game-container {
     display: flex;
     flex-wrap: wrap;
     gap: 20px;
     justify-content: center;
+    z-index: 5;
 }
 
 .player-stats {
@@ -63,7 +206,7 @@ h2 {
     max-width: 300px;
 }
 
-/* Player and enemy stats */
+/* ================ Player and Enemy Stats ================ */
 .stats-container {
     display: flex;
     flex-direction: column;
@@ -125,16 +268,7 @@ h2 {
     background-color: #FF9800;
 }
 
-/* Character name */
-.character-name {
-    text-align: center;
-    font-size: 1.2rem;
-    font-weight: bold;
-    margin-bottom: 15px;
-    color: #6200ea;
-}
-
-/* Combat log */
+/* ================ Combat Log ================ */
 #log {
     height: 300px;
     overflow-y: auto;
@@ -201,7 +335,7 @@ h2 {
     font-weight: bold;
 }
 
-/* Action buttons */
+/* ================ Action Buttons ================ */
 #action-buttons {
     display: flex;
     flex-wrap: wrap;
@@ -254,12 +388,13 @@ h2 {
     background-color: #EF5350;
 }
 
-/* Shop layout */
+/* ================ Shop Layout ================ */
 #shop-container {
     display: none;
     flex-direction: column;
     max-width: 800px;
     margin: 0 auto;
+    z-index: 20;
 }
 
 .shop-header {
@@ -330,60 +465,7 @@ h2 {
     min-height: 1.5em;
 }
 
-/* Character selection */
-#character-select {
-    display: none;
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-.character-list {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    margin-top: 20px;
-}
-
-.character-item {
-    background-color: #444;
-    border-radius: 5px;
-    padding: 15px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.character-name {
-    font-weight: bold;
-    color: #6200ea;
-    font-size: 1.2rem;
-}
-
-.character-info {
-    color: #ccc;
-}
-
-.create-form {
-    display: flex;
-    gap: 10px;
-    margin-top: 10px;
-}
-
-.create-form input {
-    flex-grow: 1;
-    padding: 8px;
-    border-radius: 5px;
-    border: none;
-    background-color: #555;
-    color: #fff;
-}
-
-.create-new {
-    border: 2px dashed #6200ea;
-    background-color: rgba(98, 0, 234, 0.1);
-}
-
-/* Highscore table */
+/* ================ Highscore Table ================ */
 .highscore-section {
     margin-top: 30px;
 }
@@ -410,34 +492,7 @@ h2 {
     background-color: #3a3a3a;
 }
 
-/* Login panel */
-.login-panel {
-    text-align: center;
-    padding: 20px;
-    max-width: 400px;
-    margin: 0 auto;
-}
-
-.login-panel form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.login-panel input {
-    padding: 10px;
-    border-radius: 5px;
-    border: none;
-    background-color: #444;
-    color: #fff;
-}
-
-#auth-message {
-    margin-top: 15px;
-    color: #F44336;
-}
-
-/* Combat visualization */
+/* ================ Combat Visuals ================ */
 .combat-container {
     display: flex;
     justify-content: space-between;
@@ -477,26 +532,95 @@ h2 {
     background-color: #F44336;
 }
 
-/* Responsive design */
-@media (max-width: 768px) {
-    .container {
-        padding: 10px;
-    }
-    
-    #game-container {
-        flex-direction: column;
-    }
-    
-    .player-stats, .enemy-stats, .combat-log {
-        max-width: 100%;
-    }
-    
-    .shop-items {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    }
+/* ================ Tower Information ================ */
+.tower-info {
+    text-align: center;
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: rgba(255, 152, 0, 0.1);
+    border-radius: 5px;
 }
 
-/* Animations */
+/* ================ Create Form ================ */
+.create-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.create-form input {
+    flex-grow: 1;
+    padding: 8px;
+    border-radius: 5px;
+    border: none;
+    background-color: #555;
+    color: #fff;
+    width: 100%;
+}
+
+/* ================ Emergency Character Creator ================ */
+#emergency-character-creator {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #333;
+    color: white;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    z-index: 10000;
+    max-width: 300px;
+    width: 100%;
+    display: none; /* Hidden by default, shown by JS when needed */
+    border: 2px solid #6200ea;
+}
+
+#emergency-character-creator h3 {
+    margin-top: 0;
+    color: #6200ea;
+    text-align: center;
+}
+
+#emergency-character-creator input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+    border: none;
+    background-color: #444;
+    color: white;
+}
+
+#emergency-character-creator button {
+    width: 100%;
+    padding: 10px;
+    background-color: #6200ea;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* ================ Utility Classes ================ */
+.hidden {
+    display: none !important;
+}
+
+.text-center {
+    text-align: center !important;
+}
+
+.mt-10 {
+    margin-top: 10px !important;
+}
+
+.mb-10 {
+    margin-bottom: 10px !important;
+}
+
+/* ================ Animations ================ */
 @keyframes pulse {
     0% { transform: scale(1); }
     50% { transform: scale(1.05); }
@@ -526,48 +650,74 @@ h2 {
     animation: fadeIn 0.5s ease-in-out;
 }
 
-/* Tower information */
-.tower-info {
-    text-align: center;
-    margin-bottom: 15px;
-    padding: 10px;
-    background-color: rgba(255, 152, 0, 0.1);
-    border-radius: 5px;
+/* ================ Responsive Design ================ */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
+    #game-container {
+        flex-direction: column;
+    }
+    
+    .player-stats, .enemy-stats, .combat-log {
+        max-width: 100%;
+    }
+    
+    .shop-items {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+    
+    .character-item.create-new {
+        max-width: 100% !important;
+    }
 }
 
-.tower-level {
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: #FF9800;
+/* ================ Special States ================ */
+/* Add this to ensure visibility for critical components */
+body.game-active #game-container {
+    display: flex !important;
 }
 
-/* Combat effects */
-.effect {
-    position: absolute;
-    pointer-events: none;
-    z-index: 10;
-    font-weight: bold;
-    animation: floatUp 1s ease-out forwards;
+body.character-select-active #character-select {
+    display: block !important;
 }
 
-@keyframes floatUp {
-    0% { transform: translateY(0); opacity: 1; }
-    100% { transform: translateY(-50px); opacity: 0; }
+body.shop-active #shop-container {
+    display: flex !important;
 }
 
-.effect.damage {
-    color: #F44336;
+/* ================ Modal Overlay (for emergencies) ================ */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
 }
 
-.effect.heal {
-    color: #4CAF50;
+.modal-content {
+    background-color: #333;
+    padding: 30px;
+    border-radius: 10px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
 }
 
-.effect.mana {
-    color: #2196F3;
-}
-
-.effect.critical {
-    font-size: 1.5em;
-    text-shadow: 0 0 5px rgba(255, 0, 0, 0.7);
+/* ================ Visibility Debugging ================ */
+/* Apply this class to any element that should be forcibly visible */
+.force-visible {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 9999 !important;
+    position: relative !important;
+    background-color: #333 !important;
+    border: 2px solid red !important;
 }
