@@ -1,5 +1,4 @@
-// Improved player.js - focuses on reliable Supabase integration
-// and robust character management
+// Complete rewrite of player.js with reliable Supabase integration
 
 // Player class - handles all player-related functionality
 class Player {
@@ -326,7 +325,7 @@ class Player {
 
     // Convert to a simple object for saving to database
     toJSON() {
-        // Ensure skills and equipment are properly stringified if they're objects
+        // Ensure skills and equipment are properly stringified
         let skillsData = this.skills;
         let equipmentData = this.equipment;
         
@@ -451,9 +450,13 @@ class PlayerManager {
     constructor(supabaseClient) {
         if (!supabaseClient) {
             console.error('Supabase client not provided to PlayerManager');
-            throw new Error('Supabase client is required for PlayerManager');
+            this.supabase = window.supabaseClient; // Try to get from global
+            if (!this.supabase) {
+                throw new Error('Supabase client is required for PlayerManager');
+            }
+        } else {
+            this.supabase = supabaseClient;
         }
-        this.supabase = supabaseClient;
     }
 
     // Get current user
@@ -683,7 +686,7 @@ class PlayerManager {
                 return false;
             }
 
-            const { data, error } = await this.supabase
+            const { error } = await this.supabase
                 .from('highscores')
                 .insert([
                     {
@@ -705,68 +708,22 @@ class PlayerManager {
             return false;
         }
     }
-    
-    // Get user profile data
-    async getUserProfile() {
+
+    // Logout user
+    async logout() {
         try {
-            const user = await this.getCurrentUser();
-            if (!user) {
-                console.error('No user logged in');
-                return null;
-            }
-
-            const { data, error } = await this.supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', user.id)
-                .single();
-
+            const { error } = await this.supabase.auth.signOut();
+            
             if (error) {
-                console.error('Error fetching user profile:', error);
-                return null;
-            }
-
-            return data;
-        } catch (error) {
-            console.error('Exception in getUserProfile:', error);
-            return null;
-        }
-    }
-    
-    // Create or update user profile
-    async updateUserProfile(username) {
-        try {
-            const user = await this.getCurrentUser();
-            if (!user) {
-                console.error('No user logged in');
+                console.error('Error during logout:', error);
                 return false;
             }
-
-            const { data, error } = await this.supabase
-                .from('profiles')
-                .upsert([
-                    {
-                        id: user.id,
-                        username: username || 'Player',
-                        updated_at: new Date().toISOString()
-                    }
-                ]);
-
-            if (error) {
-                console.error('Error updating user profile:', error);
-                return false;
-            }
-
-            console.log('User profile updated successfully');
+            
+            console.log('Logged out successfully');
             return true;
         } catch (error) {
-            console.error('Exception in updateUserProfile:', error);
+            console.error('Exception during logout:', error);
             return false;
         }
     }
-}
-
-// Export the Player and PlayerManager classes
-if (typeof module !== 'undefined') {
-    module.exports = { Player, PlayerManager };
 }

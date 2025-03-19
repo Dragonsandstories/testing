@@ -5,25 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Roguelike Mage Tower</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        /* Critical overrides to ensure visibility */
-        #character-select {
-            display: block !important;
-            z-index: 1000 !important;
-        }
-        .character-item {
-            display: block !important;
-            margin-bottom: 15px !important;
-        }
-        #game-container, #shop-container {
-            display: none;
-        }
-        .create-new {
-            background-color: #4a148c !important;
-            border: 2px dashed #9c27b0 !important;
-            padding: 15px !important;
-        }
-    </style>
 </head>
 <body>
     <div class="container">
@@ -46,17 +27,11 @@
         </div>
 
         <!-- Character Select Panel -->
-        <div id="character-select" class="panel">
+        <div id="character-select" class="panel" style="display: none;">
             <h2>Character Selection</h2>
+            <button id="logout-button" class="logout-button">Logout</button>
             <div id="character-list" class="character-list">
                 <!-- Character items will be populated here -->
-                <div class="character-item create-new">
-                    <div class="character-name" style="color: white !important;">Create New Character</div>
-                    <div class="create-form" style="display: block !important;">
-                        <input type="text" id="new-char-name" placeholder="Character Name" required maxlength="20">
-                        <button id="create-char-btn">Create Character</button>
-                    </div>
-                </div>
             </div>
             <div class="highscore-section">
                 <h3>Highscores</h3>
@@ -67,7 +42,7 @@
         </div>
 
         <!-- Game Container -->
-        <div id="game-container">
+        <div id="game-container" style="display: none;">
             <div class="panel player-stats">
                 <div class="character-name" id="player-name">Player</div>
                 <div class="stats-container">
@@ -137,6 +112,7 @@
                 <div id="action-buttons">
                     <!-- Skill buttons will be populated here -->
                 </div>
+                <button id="game-logout-button" class="logout-button">Logout</button>
             </div>
             
             <div class="panel enemy-stats">
@@ -159,7 +135,7 @@
         </div>
         
         <!-- Shop Container -->
-        <div id="shop-container" class="panel">
+        <div id="shop-container" class="panel" style="display: none;">
             <div class="shop-header">
                 <h2>Mage Tower Shop</h2>
                 <div class="shop-gold">
@@ -168,70 +144,53 @@
                 <button id="close-shop">Close Shop</button>
             </div>
             
-            <div id="shop-sections">
-                <!-- Shop sections will be populated by JS -->
+            <div class="shop-section">
+                <h3>Potions</h3>
+                <div id="potions-container" class="shop-items">
+                    <!-- Potion items will be populated here -->
+                </div>
+            </div>
+            
+            <div class="shop-section">
+                <h3>Equipment</h3>
+                <div id="equipment-container" class="shop-items">
+                    <!-- Equipment items will be populated here -->
+                </div>
+            </div>
+            
+            <div class="shop-section">
+                <h3>Skills</h3>
+                <div id="skills-container" class="shop-items">
+                    <!-- Skill items will be populated here -->
+                </div>
             </div>
             
             <div id="shop-message"></div>
         </div>
-
-        <!-- Emergency Character Creation (always visible as fallback) -->
-        <div id="emergency-character-creator" style="position: fixed; bottom: 20px; right: 20px; background-color: #333; color: white; padding: 15px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.5); z-index: 10000; display: none;">
-            <h3 style="color: #6200ea; margin-top: 0;">Emergency Character Creation</h3>
-            <input type="text" id="emergency-char-name" placeholder="Character Name" style="width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box; background-color: #444; color: white; border: none; border-radius: 3px;">
-            <button id="emergency-create-btn" style="width: 100%; padding: 8px; background-color: #6200ea; color: white; border: none; border-radius: 3px; cursor: pointer;">Create Character</button>
-        </div>
     </div>
 
-    <!-- First load critical scripts -->
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Debug message
-        console.log("HTML document loaded successfully");
-        
-        // Define Supabase credentials in the global scope
+        // Supabase credentials
         window.SUPABASE_URL = 'https://lhkvzwsdidulwulghebk.supabase.co';
         window.SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3Z6d3NkaWR1bHd1bGdoZWJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMTQ5OTksImV4cCI6MjA1Njc5MDk5OX0.lz3Pch5hBBO2Ug_iI5f2jMGV4Xwqt8t4RcPrn4_EzPw';
+        window.supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
         
-        // Check login status immediately
-        document.addEventListener('DOMContentLoaded', async function() {
-            try {
-                // Create Supabase client
-                const supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
-                console.log("Checking login status...");
-                
-                // Check if user is logged in
-                const { data: { user } } = await supabase.auth.getUser();
-                
-                if (user) {
-                    console.log("User is logged in:", user.email);
-                    // Hide auth form, show character select
-                    document.getElementById('auth-form-container').style.display = 'none';
-                    document.getElementById('character-select').style.display = 'block';
-                    
-                    // Load scripts after confirming login
-                    loadGameScripts();
-                    
-                    // Show emergency creator after a delay as fallback
-                    setTimeout(() => {
-                        document.getElementById('emergency-character-creator').style.display = 'block';
-                    }, 5000);
-                } else {
-                    console.log("User is not logged in");
-                    document.getElementById('auth-form-container').style.display = 'block';
-                    document.getElementById('character-select').style.display = 'none';
-                }
-            } catch (error) {
-                console.error("Error checking login:", error);
-            }
-        });
-        
-        // Handle login form
+        // Auth form handling
         const authForm = document.getElementById('auth-form');
         const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('password');
         const authMessage = document.getElementById('auth-message');
+        const registerButton = document.getElementById('register-button');
+        const authFormContainer = document.getElementById('auth-form-container');
         
+        // Register button redirects to register page
+        registerButton.addEventListener('click', () => {
+            window.location.href = 'register.html';
+        });
+        
+        // Handle login form submission
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -247,10 +206,7 @@
             try {
                 authMessage.textContent = 'Logging in...';
                 
-                // Create Supabase client
-                const supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
-                
-                const { data, error } = await supabase.auth.signInWithPassword({
+                const { data, error } = await window.supabaseClient.auth.signInWithPassword({
                     email: email,
                     password: password
                 });
@@ -258,117 +214,28 @@
                 if (error) {
                     authMessage.textContent = `Login error: ${error.message}`;
                     authMessage.style.color = '#ff4444';
+                    console.error("Login error:", error);
                 } else {
-                    authMessage.textContent = 'Logged in successfully!';
+                    authMessage.textContent = `Logged in successfully!`;
                     authMessage.style.color = '#4CAF50';
+                    console.log("Login successful");
                     
-                    // Hide auth form, show character select
-                    document.getElementById('auth-form-container').style.display = 'none';
-                    document.getElementById('character-select').style.display = 'block';
+                    // Hide auth form
+                    authFormContainer.style.display = 'none';
                     
-                    // Load scripts after login
+                    // Load game scripts
                     loadGameScripts();
                 }
             } catch (err) {
                 authMessage.textContent = `An error occurred: ${err.message}`;
                 authMessage.style.color = '#ff4444';
+                console.error("Login process error:", err);
             }
         });
         
-        // Register button
-        document.getElementById('register-button').addEventListener('click', () => {
-            window.location.href = 'register.html';
-        });
-        
-        // Emergency character creation
-        document.getElementById('emergency-create-btn').addEventListener('click', async () => {
-            const nameInput = document.getElementById('emergency-char-name');
-            if (nameInput && nameInput.value.trim()) {
-                await createCharacterDirectly(nameInput.value.trim());
-            } else {
-                alert('Please enter a character name');
-            }
-        });
-        
-        // Direct character creation function
-        async function createCharacterDirectly(name) {
-            try {
-                const supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
-                
-                // Get current user
-                const { data: { user } } = await supabase.auth.getUser();
-                
-                if (!user) {
-                    alert("You must be logged in to create a character");
-                    return;
-                }
-                
-                // Create basic character data
-                const characterData = {
-                    name: name,
-                    user_id: user.id,
-                    character_class: 'Mage',
-                    level: 1,
-                    xp: 0,
-                    xp_to_next_level: 100,
-                    health: 100,
-                    max_health: 100,
-                    mana: 50,
-                    max_mana: 50,
-                    gold: 0,
-                    score: 0,
-                    tower_level: 1,
-                    strength: 5,
-                    intelligence: 10,
-                    vitality: 5,
-                    agility: 5,
-                    skills: JSON.stringify([
-                        {
-                            name: 'Fireball',
-                            type: 'fire',
-                            damage: 10,
-                            manaCost: 5,
-                            description: 'A basic ball of fire'
-                        },
-                        {
-                            name: 'Ice Shard',
-                            type: 'ice',
-                            damage: 8,
-                            manaCost: 4,
-                            description: 'A sharp shard of ice'
-                        }
-                    ]),
-                    equipment: JSON.stringify({})
-                };
-                
-                // Insert directly into Supabase
-                const { data, error } = await supabase
-                    .from('characters')
-                    .insert([characterData])
-                    .select();
-                
-                if (error) {
-                    console.error('Error creating character:', error);
-                    alert(`Error creating character: ${error.message}`);
-                    return;
-                }
-                
-                alert(`Character "${name}" created successfully! Refreshing page...`);
-                
-                // Refresh the page after a short delay
-                setTimeout(function() {
-                    window.location.reload();
-                }, 1500);
-                
-            } catch (error) {
-                console.error('Error in createCharacterDirectly:', error);
-                alert('Failed to create character. See console for details.');
-            }
-        }
-        
-        // Function to load game scripts in sequence
+        // Load game scripts
         function loadGameScripts() {
-            console.log("Loading game scripts sequentially...");
+            console.log("Loading game scripts...");
             const scripts = [
                 'skills.js',
                 'monster.js',
@@ -378,9 +245,11 @@
                 'game.js'
             ];
             
+            let loadedScripts = 0;
+            
             function loadScript(index) {
                 if (index >= scripts.length) {
-                    console.log('All game scripts loaded successfully');
+                    console.log("All scripts loaded");
                     return;
                 }
                 
@@ -388,6 +257,7 @@
                 script.src = scripts[index];
                 script.onload = function() {
                     console.log(`Loaded script: ${scripts[index]}`);
+                    loadedScripts++;
                     loadScript(index + 1);
                 };
                 script.onerror = function() {
@@ -397,350 +267,31 @@
                 document.body.appendChild(script);
             }
             
-            // Start loading scripts in sequence
             loadScript(0);
         }
-    </script>
-    <script>
-        // Direct character display fix
+        
+        // Check if user is already logged in when page loads
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log("Running direct character display fix");
-            
-            // Wait for a bit to ensure other scripts have loaded
-            setTimeout(async function() {
-                try {
-                    // Check if user is logged in
-                    const supabase = window.supabase.createClient(
-                        window.SUPABASE_URL || 'https://lhkvzwsdidulwulghebk.supabase.co',
-                        window.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3Z6d3NkaWR1bHd1bGdoZWJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMTQ5OTksImV4cCI6MjA1Njc5MDk5OX0.lz3Pch5hBBO2Ug_iI5f2jMGV4Xwqt8t4RcPrn4_EzPw'
-                    );
-                    
-                    const { data: { user } } = await supabase.auth.getUser();
-                    if (!user) {
-                        console.log("User not logged in, skipping character load");
-                        return;
-                    }
-                    
-                    console.log("User logged in, loading characters directly");
-                    
-                    // Add logout button
-                    addEmergencyLogoutButton();
-                    
-                    // Directly load characters from Supabase
-                    await loadCharactersDirectly(supabase, user.id);
-                } catch (error) {
-                    console.error("Error in direct character fix:", error);
-                }
-            }, 1000); // Wait 1 second for everything to load
-        });
-        
-        // Add emergency logout button
-        function addEmergencyLogoutButton() {
-            if (document.getElementById('emergency-logout-btn')) return;
-            
-            const logoutBtn = document.createElement('button');
-            logoutBtn.id = 'emergency-logout-btn';
-            logoutBtn.textContent = 'Logout';
-            logoutBtn.style.position = 'fixed';
-            logoutBtn.style.top = '10px';
-            logoutBtn.style.right = '10px';
-            logoutBtn.style.zIndex = '10000';
-            logoutBtn.style.padding = '8px 15px';
-            logoutBtn.style.backgroundColor = '#F44336';
-            logoutBtn.style.color = 'white';
-            logoutBtn.style.border = 'none';
-            logoutBtn.style.borderRadius = '4px';
-            logoutBtn.style.cursor = 'pointer';
-            
-            logoutBtn.addEventListener('click', async function() {
-                if (confirm('Are you sure you want to logout?')) {
-                    const supabase = window.supabase.createClient(
-                        window.SUPABASE_URL || 'https://lhkvzwsdidulwulghebk.supabase.co',
-                        window.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3Z6d3NkaWR1bHd1bGdoZWJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMTQ5OTksImV4cCI6MjA1Njc5MDk5OX0.lz3Pch5hBBO2Ug_iI5f2jMGV4Xwqt8t4RcPrn4_EzPw'
-                    );
-                    await supabase.auth.signOut();
-                    alert('Logged out successfully');
-                    window.location.reload();
-                }
-            });
-            
-            document.body.appendChild(logoutBtn);
-            console.log("Emergency logout button added");
-        }
-        
-        // Load characters directly from Supabase
-        async function loadCharactersDirectly(supabase, userId) {
             try {
-                // Get character list container
-                const characterListEl = document.getElementById('character-list');
-                if (!characterListEl) {
-                    console.error("Character list element not found");
-                    return;
-                }
-                
-                // Clear any previous content except create new option
-                const createNewOption = characterListEl.querySelector('.create-new');
-                characterListEl.innerHTML = '';
-                
-                // Fetch characters directly from Supabase
-                const { data, error } = await supabase
-                    .from('characters')
-                    .select('*')
-                    .eq('user_id', userId);
+                const { data: { user }, error } = await window.supabaseClient.auth.getUser();
                 
                 if (error) {
-                    console.error("Error fetching characters:", error);
+                    console.error("Error checking auth:", error);
                     return;
                 }
                 
-                console.log("Successfully loaded characters:", data.length);
-                
-                if (data && data.length > 0) {
-                    // Process each character
-                    data.forEach(character => {
-                        // Create character element
-                        const charEl = document.createElement('div');
-                        charEl.className = 'character-item';
-                        charEl.setAttribute('data-id', character.id);
-                        charEl.style.backgroundColor = '#444';
-                        charEl.style.borderRadius = '8px';
-                        charEl.style.padding = '15px';
-                        charEl.style.marginBottom = '15px';
-                        charEl.style.display = 'block';
-                        
-                        // Set character content
-                        charEl.innerHTML = `
-                            <div class="character-name" style="color: #6200ea; font-weight: bold; font-size: 1.2rem; margin-bottom: 5px;">${character.name}</div>
-                            <div class="character-info" style="color: #ccc; margin-bottom: 10px;">
-                                Level ${character.level} ${character.character_class} - Tower Level ${character.tower_level}
-                            </div>
-                            <div style="display: flex; gap: 10px;">
-                                <button class="select-button" data-id="${character.id}" style="flex: 1; padding: 8px; background-color: #6200ea; color: white; border: none; border-radius: 5px; cursor: pointer;">Select</button>
-                                <button class="delete-button" data-id="${character.id}" style="flex: 1; padding: 8px; background-color: #F44336; color: white; border: none; border-radius: 5px; cursor: pointer;">Delete</button>
-                            </div>
-                        `;
-                        
-                        // Add to character list
-                        characterListEl.appendChild(charEl);
-                        
-                        // Add event listeners
-                        const selectBtn = charEl.querySelector('.select-button');
-                        const deleteBtn = charEl.querySelector('.delete-button');
-                        
-                        if (selectBtn) {
-                            selectBtn.addEventListener('click', function() {
-                                selectCharacterDirectly(character, supabase);
-                            });
-                        }
-                        
-                        if (deleteBtn) {
-                            deleteBtn.addEventListener('click', function() {
-                                deleteCharacterDirectly(character.id, supabase);
-                            });
-                        }
-                    });
-                    
-                    // If we have characters, add the create new option at the end
-                    if (createNewOption) {
-                        characterListEl.appendChild(createNewOption);
-                    }
-                } else {
-                    // No characters found, just add back the create new option
-                    if (createNewOption) {
-                        characterListEl.appendChild(createNewOption);
-                    } else {
-                        // Create new character option doesn't exist, create it
-                        createNewCharacterOption(characterListEl, supabase, userId);
-                    }
-                }
-            } catch (error) {
-                console.error("Error loading characters directly:", error);
-            }
-        }
-        
-        // Create new character option
-        function createNewCharacterOption(containerEl, supabase, userId) {
-            if (!containerEl) return;
-            
-            // Create element
-            const createEl = document.createElement('div');
-            createEl.className = 'character-item create-new';
-            createEl.style.backgroundColor = '#4a148c';
-            createEl.style.border = '2px dashed #9c27b0';
-            createEl.style.padding = '15px';
-            createEl.style.marginBottom = '15px';
-            createEl.style.display = 'block';
-            
-            // Set content
-            createEl.innerHTML = `
-                <div class="character-name" style="color: white; font-weight: bold; font-size: 1.2rem; margin-bottom: 5px;">Create New Character</div>
-                <div class="create-form" style="display: block; margin-top: 10px;">
-                    <input type="text" id="direct-char-name" placeholder="Character Name" required maxlength="20" style="width: 100%; padding: 8px; margin-bottom: 10px; background-color: #333; color: white; border: 1px solid #666; border-radius: 4px;">
-                    <button id="direct-create-btn" style="width: 100%; padding: 8px; background-color: #6200ea; color: white; border: none; border-radius: 5px; cursor: pointer;">Create Character</button>
-                </div>
-            `;
-            
-            // Add to container
-            containerEl.appendChild(createEl);
-            
-            // Add event listener
-            const createBtn = document.getElementById('direct-create-btn');
-            if (createBtn) {
-                createBtn.addEventListener('click', function() {
-                    const nameInput = document.getElementById('direct-char-name');
-                    if (nameInput && nameInput.value.trim()) {
-                        createCharacterDirectly(nameInput.value.trim(), supabase, userId);
-                    } else {
-                        alert('Please enter a character name');
-                    }
-                });
-            }
-        }
-        
-        // Create character directly
-        async function createCharacterDirectly(name, supabase, userId) {
-            try {
-                if (!name || name.trim() === '') {
-                    alert('Please enter a character name');
-                    return;
-                }
-                
-                console.log(`Creating character directly: ${name}`);
-                
-                // Create character data
-                const characterData = {
-                    name: name,
-                    user_id: userId,
-                    character_class: 'Mage',
-                    level: 1,
-                    xp: 0,
-                    xp_to_next_level: 100,
-                    health: 100,
-                    max_health: 100,
-                    mana: 50,
-                    max_mana: 50,
-                    gold: 0,
-                    score: 0,
-                    tower_level: 1,
-                    strength: 5,
-                    intelligence: 10,
-                    vitality: 5,
-                    agility: 5,
-                    skills: JSON.stringify([
-                        {
-                            name: 'Fireball',
-                            type: 'fire',
-                            damage: 10,
-                            manaCost: 5,
-                            description: 'A basic ball of fire'
-                        },
-                        {
-                            name: 'Ice Shard',
-                            type: 'ice',
-                            damage: 8,
-                            manaCost: 4,
-                            description: 'A sharp shard of ice'
-                        }
-                    ]),
-                    equipment: JSON.stringify({})
-                };
-                
-                // Insert into database
-                const { data, error } = await supabase
-                    .from('characters')
-                    .insert([characterData])
-                    .select();
-                
-                if (error) {
-                    console.error('Error creating character directly:', error);
-                    alert(`Error creating character: ${error.message}`);
-                    return;
-                }
-                
-                console.log('Character created successfully:', data);
-                alert(`Character "${name}" created successfully!`);
-                
-                // Reload characters
-                loadCharactersDirectly(supabase, userId);
-            } catch (error) {
-                console.error('Error in createCharacterDirectly:', error);
-                alert(`Failed to create character: ${error.message}`);
-            }
-        }
-        
-        // Select character directly
-        async function selectCharacterDirectly(character, supabase) {
-            try {
-                console.log(`Selecting character directly: ${character.name}`);
-                
-                // This will store selected character ID in localStorage
-                localStorage.setItem('selectedCharacterId', character.id);
-                
-                // Hide character select, show game container
-                const characterSelectEl = document.getElementById('character-select');
-                const gameContainerEl = document.getElementById('game-container');
-                
-                if (characterSelectEl) characterSelectEl.style.display = 'none';
-                if (gameContainerEl) {
-                    gameContainerEl.style.display = 'flex';
-                    
-                    // Attempt to trigger game initialization
-                    // This is a bit of a hack, but it should work to force the game to load the character
-                    const gameEvent = new CustomEvent('gameStart', { detail: { characterId: character.id } });
-                    document.dispatchEvent(gameEvent);
-                    
-                    alert(`Character "${character.name}" selected. Starting game...`);
-                    window.location.reload(); // Force reload as fallback
-                } else {
-                    // If game container doesn't exist, just reload the page
-                    alert(`Character "${character.name}" selected. Refreshing page...`);
-                    window.location.reload();
-                }
-            } catch (error) {
-                console.error('Error selecting character directly:', error);
-                alert(`Error selecting character: ${error.message}`);
-            }
-        }
-        
-        // Delete character directly
-        async function deleteCharacterDirectly(characterId, supabase) {
-            try {
-                if (!confirm('Are you sure you want to delete this character? This cannot be undone.')) {
-                    return;
-                }
-                
-                console.log(`Deleting character directly: ${characterId}`);
-                
-                // Delete from database
-                const { error } = await supabase
-                    .from('characters')
-                    .delete()
-                    .eq('id', characterId);
-                
-                if (error) {
-                    console.error('Error deleting character directly:', error);
-                    alert(`Error deleting character: ${error.message}`);
-                    return;
-                }
-                
-                console.log('Character deleted successfully');
-                alert('Character deleted successfully');
-                
-                // Get user ID
-                const { data: { user } } = await supabase.auth.getUser();
-                
-                // Reload characters
                 if (user) {
-                    loadCharactersDirectly(supabase, user.id);
+                    console.log("User already logged in:", user);
+                    authFormContainer.style.display = 'none';
+                    loadGameScripts();
                 } else {
-                    // If no user, reload page
-                    window.location.reload();
+                    console.log("No user logged in");
+                    authFormContainer.style.display = 'block';
                 }
             } catch (error) {
-                console.error('Error in deleteCharacterDirectly:', error);
-                alert(`Failed to delete character: ${error.message}`);
+                console.error("Error checking authentication:", error);
             }
-        }
-        </script>
+        });
+    </script>
 </body>
 </html>

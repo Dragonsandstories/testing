@@ -1,20 +1,12 @@
-// Fully rewritten game.js with improved functionality
+// Complete rewrite of game.js that handles proper character loading, selection, and game functionality
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Game script loaded!');
     
-    // Get Supabase credentials from global scope
-    const SUPABASE_URL = window.SUPABASE_URL || 'https://lhkvzwsdidulwulghebk.supabase.co';
-    const SUPABASE_KEY = window.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3Z6d3NkaWR1bHd1bGdoZWJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMTQ5OTksImV4cCI6MjA1Njc5MDk5OX0.lz3Pch5hBBO2Ug_iI5f2jMGV4Xwqt8t4RcPrn4_EzPw';
-
-    // Create Supabase client
-    console.log('Creating Supabase client...');
-    let supabaseClient;
-    try {
-        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        console.log('Supabase client created');
-    } catch (error) {
-        console.error('Failed to create Supabase client:', error);
-        alert('Failed to connect to the game server. Please refresh the page and try again.');
+    // Get Supabase client from global scope
+    const supabaseClient = window.supabaseClient;
+    if (!supabaseClient) {
+        console.error('Supabase client not found in global scope');
+        alert('Game initialization failed. Please refresh the page and try again.');
         return;
     }
 
@@ -37,19 +29,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize game managers
     console.log('Initializing game managers...');
-    let skillsManager, playerManager, progressManager, shop;
-    
-    try {
-        skillsManager = new SkillsManager();
-        playerManager = new PlayerManager(supabaseClient);
-        progressManager = new ProgressManager();
-        shop = new Shop(skillsManager);
-        console.log('Game managers initialized');
-    } catch (error) {
-        console.error('Error initializing game managers:', error);
-        alert('Failed to initialize game. Please refresh the page and try again.');
-        return;
-    }
+    const skillsManager = new SkillsManager();
+    const playerManager = new PlayerManager(supabaseClient);
+    const progressManager = new ProgressManager();
+    const shop = new Shop(skillsManager);
 
     // Game state
     let player = null;
@@ -91,81 +74,46 @@ document.addEventListener('DOMContentLoaded', function() {
     const shopEl = getElement('shop-container');
     const highscoreTableEl = getElement('highscore-table');
     const authFormContainer = getElement('auth-form-container');
+    const logoutButton = getElement('logout-button');
+    const gameLogoutButton = getElement('game-logout-button');
 
-    // Add logout button to character select screen
-    function addLogoutButton() {
-        // Check if logout button already exists
-        if (document.getElementById('logout-button')) {
-            return;
-        }
-        
-        // Create logout button
-        const logoutButton = document.createElement('button');
-        logoutButton.id = 'logout-button';
-        logoutButton.className = 'logout-button';
-        logoutButton.textContent = 'Logout';
-        logoutButton.style.position = 'absolute';
-        logoutButton.style.top = '15px';
-        logoutButton.style.right = '15px';
-        logoutButton.style.backgroundColor = '#F44336';
-        logoutButton.style.color = 'white';
-        logoutButton.style.padding = '8px 15px';
-        logoutButton.style.border = 'none';
-        logoutButton.style.borderRadius = '5px';
-        logoutButton.style.cursor = 'pointer';
-        logoutButton.style.zIndex = '1000';
-        
-        // Add event listener
+    // Set up logout functionality
+    if (logoutButton) {
         logoutButton.addEventListener('click', handleLogout);
-        
-        // Add to character select
-        if (characterSelectEl) {
-            characterSelectEl.style.position = 'relative';
-            characterSelectEl.appendChild(logoutButton);
-        } else {
-            // Add to body if character select not found
-            document.body.appendChild(logoutButton);
-        }
-        
-        console.log('Logout button added');
+    }
+    
+    if (gameLogoutButton) {
+        gameLogoutButton.addEventListener('click', handleLogout);
     }
     
     // Handle logout
     async function handleLogout() {
-        try {
-            if (confirm('Are you sure you want to logout?')) {
-                console.log('Logging out...');
-                const { error } = await supabaseClient.auth.signOut();
+        if (confirm('Are you sure you want to logout?')) {
+            try {
+                const success = await playerManager.logout();
                 
-                if (error) {
-                    console.error('Error during logout:', error);
+                if (success) {
+                    alert('Logged out successfully.');
+                    
+                    // Reset game state
+                    player = null;
+                    monster = null;
+                    
+                    // Show login form
+                    if (authFormContainer) authFormContainer.style.display = 'block';
+                    if (characterSelectEl) characterSelectEl.style.display = 'none';
+                    if (gameContainer) gameContainer.style.display = 'none';
+                    if (shopEl) shopEl.style.display = 'none';
+                    
+                    // Reload page
+                    window.location.reload();
+                } else {
                     alert('Error during logout. Please try again.');
-                    return;
                 }
-                
-                console.log('Logged out successfully');
-                // Reset game state
-                player = null;
-                monster = null;
-                gameState = 'character_select';
-                
-                // Show auth form, hide other containers
-                if (authFormContainer) authFormContainer.style.display = 'block';
-                if (characterSelectEl) characterSelectEl.style.display = 'none';
-                if (gameContainer) gameContainer.style.display = 'none';
-                if (shopEl) shopEl.style.display = 'none';
-                
-                // Clear any stored data
-                localStorage.removeItem('selectedCharacterId');
-                
-                alert('Logged out successfully.');
-                
-                // Reload page to reset everything
-                window.location.reload();
+            } catch (error) {
+                console.error('Error during logout:', error);
+                alert('Error during logout. Please try again.');
             }
-        } catch (error) {
-            console.error('Exception during logout:', error);
-            alert('Error during logout. Please try again.');
         }
     }
 
@@ -183,7 +131,7 @@ document.addEventListener('DOMContentLoaded', function() {
         logEl.scrollTop = logEl.scrollHeight;
     }
 
-    // Update game UI - made more robust
+    // Update game UI
     function updateUI() {
         if (!player) return;
         
@@ -273,20 +221,12 @@ document.addEventListener('DOMContentLoaded', function() {
             shopButton.textContent = '🛒 Shop';
             shopButton.addEventListener('click', openShop);
             actionButtonsEl.appendChild(shopButton);
-            
-            // Add logout button to game screen too
-            const gameLogoutBtn = document.createElement('button');
-            gameLogoutBtn.className = 'logout-button';
-            gameLogoutBtn.textContent = '🚪 Logout';
-            gameLogoutBtn.style.backgroundColor = '#F44336';
-            gameLogoutBtn.addEventListener('click', handleLogout);
-            actionButtonsEl.appendChild(gameLogoutBtn);
         } catch (error) {
             console.error('Error updating action buttons:', error);
         }
     }
 
-    // Basic game functions (these remain mostly unchanged)
+    // Use a skill on the monster
     function useSkill(skillIndex) {
         if (gameState !== 'playing') return;
         
@@ -450,32 +390,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Shop functions (simplified)
+    // Shop functions
     function openShop() {
         try {
             gameState = 'shop';
             if (gameContainer) gameContainer.style.display = 'none';
             if (shopEl) {
                 shopEl.style.display = 'block';
-                
-                // Populate shop sections
-                const shopSections = getElement('shop-sections');
-                if (shopSections) {
-                    shopSections.innerHTML = `
-                        <div class="shop-section">
-                            <h3>Potions</h3>
-                            <div id="potions-container" class="shop-items"></div>
-                        </div>
-                        <div class="shop-section">
-                            <h3>Equipment</h3>
-                            <div id="equipment-container" class="shop-items"></div>
-                        </div>
-                        <div class="shop-section">
-                            <h3>Skills</h3>
-                            <div id="skills-container" class="shop-items"></div>
-                        </div>
-                    `;
-                }
                 
                 // Populate shop items
                 populateShop();
@@ -509,7 +430,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (skillsContainer) skillsContainer.innerHTML = '';
             
             // Populate potions
-            if (potionsContainer && shop.items.potions) {
+            if (potionsContainer && shop.items && shop.items.potions) {
                 shop.items.potions.forEach(item => {
                     const itemEl = createShopItemElement(item);
                     potionsContainer.appendChild(itemEl);
@@ -517,7 +438,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Populate equipment
-            if (equipmentContainer && shop.items.equipment) {
+            if (equipmentContainer && shop.items && shop.items.equipment) {
                 shop.items.equipment.forEach(item => {
                     const itemEl = createShopItemElement(item);
                     equipmentContainer.appendChild(itemEl);
@@ -711,80 +632,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Refresh the character list
-    async function refreshCharacterList() {
-        try {
-            const characterListEl = document.getElementById('character-list');
-            if (!characterListEl) {
-                console.error('Character list element not found');
-                return;
-            }
-            
-            // Keep the create new option if it exists
-            const createNewOption = characterListEl.querySelector('.create-new');
-            
-            // Clear the list
-            characterListEl.innerHTML = '';
-            
-            // Add back the create new option if it existed
-            if (createNewOption) {
-                characterListEl.appendChild(createNewOption);
-            } else {
-                // Add create new option if it doesn't exist
-                addCreateNewCharacterOption(characterListEl);
-            }
-            
-            // Get characters
-            const characters = await playerManager.getPlayerCharacters();
-            console.log(`Found ${characters ? characters.length : 0} characters to display`);
-            
-            if (characters && characters.length > 0) {
-                // Insert characters before the create new option
-                characters.forEach(character => {
-                    console.log(`Adding character to list: ${character.name} (Level ${character.level})`);
-                    
-                    const charEl = document.createElement('div');
-                    charEl.className = 'character-item';
-                    charEl.style.backgroundColor = '#444';
-                    charEl.style.borderRadius = '8px';
-                    charEl.style.padding = '15px';
-                    charEl.style.marginBottom = '10px';
-                    
-                    charEl.innerHTML = `
-                        <div class="character-name" style="color: #6200ea; font-weight: bold;">${character.name}</div>
-                        <div class="character-info" style="color: #ccc; margin: 5px 0 10px 0;">Level ${character.level} ${character.characterClass} - Tower Level ${character.towerLevel}</div>
-                        <div style="display: flex; gap: 10px;">
-                            <button class="select-button" style="flex: 1; padding: 8px; background-color: #6200ea; color: white; border: none; border-radius: 5px; cursor: pointer;">Select</button>
-                            <button class="delete-button" style="flex: 1; padding: 8px; background-color: #F44336; color: white; border: none; border-radius: 5px; cursor: pointer;">Delete</button>
-                        </div>
-                    `;
-                    
-                    // Insert character before create new option
-                    if (createNewOption && createNewOption.parentNode === characterListEl) {
-                        characterListEl.insertBefore(charEl, createNewOption);
-                    } else {
-                        characterListEl.appendChild(charEl);
-                    }
-                    
-                    // Add event listeners
-                    const selectButton = charEl.querySelector('.select-button');
-                    const deleteButton = charEl.querySelector('.delete-button');
-                    
-                    if (selectButton) {
-                        selectButton.addEventListener('click', () => selectCharacter(character));
-                    }
-                    
-                    if (deleteButton) {
-                        deleteButton.addEventListener('click', () => deleteCharacter(character.id));
-                    }
-                });
-            }
-        } catch (error) {
-            console.error('Error refreshing character list:', error);
-        }
-    }
-    
-    // Character management - Completely rewritten for reliability
+    // Character management
     async function showCharacterSelect() {
         try {
             console.log('Showing character selection screen');
@@ -804,50 +652,37 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            // Add logout button
-            addLogoutButton();
-            
-            // Refresh character list
-            await refreshCharacterList();
-            
-            // Load highscores
-            try {
-                await loadHighscores();
-            } catch (error) {
-                console.error('Error loading highscores:', error);
+            // Get character list element
+            const characterListEl = getElement('character-list');
+            if (!characterListEl) {
+                console.error('Character list element not found');
+                return;
             }
-        } catch (error) {
-            console.error('Error in showCharacterSelect:', error);
-        }
-    }
-
-    function addCreateNewCharacterOption(containerEl) {
-        if (!containerEl) return;
-        
-        try {
-            const createEl = document.createElement('div');
-            createEl.className = 'character-item create-new';
-            createEl.style.display = 'block';
-            createEl.style.backgroundColor = '#4a148c';
-            createEl.style.border = '2px dashed #9c27b0';
-            createEl.style.padding = '15px';
-            createEl.style.margin = '10px 0';
             
-            createEl.innerHTML = `
-                <div class="character-name" style="color: white;">Create New Character</div>
-                <div class="create-form" style="display: block; margin-top: 10px;">
-                    <input type="text" id="new-char-name" placeholder="Character Name" required maxlength="20" style="width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box;">
-                    <button id="create-char-btn" style="width: 100%; padding: 8px; background-color: #6200ea; color: white; border: none; border-radius: 5px; cursor: pointer;">Create Character</button>
+            // Clear the list
+            characterListEl.innerHTML = '';
+            
+            // Load existing characters
+            const characters = await playerManager.getPlayerCharacters();
+            console.log(`Loaded ${characters.length} characters`);
+            
+            // Add create new character option
+            const createCharOption = document.createElement('div');
+            createCharOption.className = 'character-item create-new';
+            createCharOption.innerHTML = `
+                <div class="character-name">Create New Character</div>
+                <div class="create-form">
+                    <input type="text" id="new-char-name" placeholder="Character Name" required maxlength="20">
+                    <button id="create-char-btn">Create Character</button>
                 </div>
             `;
+            characterListEl.appendChild(createCharOption);
             
-            containerEl.appendChild(createEl);
-            
-            // Add event listener
-            const createBtn = document.getElementById('create-char-btn');
-            if (createBtn) {
-                createBtn.addEventListener('click', () => {
-                    const nameInput = document.getElementById('new-char-name');
+            // Add event listener for create button
+            const createCharBtn = getElement('create-char-btn');
+            if (createCharBtn) {
+                createCharBtn.addEventListener('click', function() {
+                    const nameInput = getElement('new-char-name');
                     if (nameInput && nameInput.value.trim()) {
                         createCharacter(nameInput.value.trim());
                     } else {
@@ -855,8 +690,42 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
             }
+            
+            // Add existing characters
+            if (characters && characters.length > 0) {
+                characters.forEach(character => {
+                    const charEl = document.createElement('div');
+                    charEl.className = 'character-item';
+                    charEl.innerHTML = `
+                        <div class="character-name">${character.name}</div>
+                        <div class="character-info">Level ${character.level} ${character.characterClass} - Tower Level ${character.towerLevel}</div>
+                        <div class="character-buttons">
+                            <button class="select-button">Select</button>
+                            <button class="delete-button">Delete</button>
+                        </div>
+                    `;
+                    
+                    // Add event listeners
+                    const selectButton = charEl.querySelector('.select-button');
+                    const deleteButton = charEl.querySelector('.delete-button');
+                    
+                    if (selectButton) {
+                        selectButton.addEventListener('click', () => selectCharacter(character));
+                    }
+                    
+                    if (deleteButton) {
+                        deleteButton.addEventListener('click', () => deleteCharacter(character.id));
+                    }
+                    
+                    // Insert before create new option
+                    characterListEl.insertBefore(charEl, createCharOption);
+                });
+            }
+            
+            // Load highscores
+            await loadHighscores();
         } catch (error) {
-            console.error('Error adding create new character option:', error);
+            console.error('Error in showCharacterSelect:', error);
         }
     }
 
@@ -879,12 +748,11 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (savedPlayer) {
                 console.log('Character saved successfully');
-                
-                // Show success message
                 alert(`Character "${name}" created successfully!`);
-                
-                // Directly refresh the character list instead of full page refresh
-                await refreshCharacterList();
+                // Refresh character selection to show new character
+                await showCharacterSelect();
+            } else {
+                alert('Failed to create character. Please try again.');
             }
         } catch (error) {
             console.error('Error creating character:', error);
@@ -892,68 +760,71 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function selectCharacter(character) {
+    async function selectCharacter(character) {
         try {
             console.log(`Selecting character: ${character.name}`);
+            
+            // Store selected character
             player = character;
             
-            // Initialize skills if needed
+            // Make sure skills are initialized
             if (!player.skills || player.skills.length === 0) {
                 console.log('Initializing skills for character');
                 player.initializeSkills(skillsManager);
             }
             
             // Set progress manager to match player's tower level
-            progressManager.currentTowerLevel = player.towerLevel;
+            progressManager.currentTowerLevel = player.towerLevel || 1;
             progressManager.monstersDefeated = 0;
             
-            // Spawn first monster
-            spawnMonster();
+            // Hide character select, show game container
+            if (characterSelectEl) characterSelectEl.style.display = 'none';
+            if (gameContainer) gameContainer.style.display = 'flex';
             
             // Change game state
             gameState = 'playing';
             
-            // Show game container, hide character select
-            if (characterSelectEl) characterSelectEl.style.display = 'none';
-            if (gameContainer) gameContainer.style.display = 'flex';
+            // Spawn a monster
+            spawnMonster();
             
             // Update UI
             updateUI();
             
-            // Log game start
-            log(`Welcome back, ${player.name}! Your journey continues on tower level ${player.towerLevel}.`, 'info');
+            alert(`Character "${character.name}" selected. Starting game...`);
         } catch (error) {
             console.error('Error selecting character:', error);
             alert(`Error selecting character: ${error.message}`);
         }
     }
 
-    async function deleteCharacter(playerId) {
-        if (!confirm('Are you sure you want to delete this character? This cannot be undone.')) {
-            return;
-        }
-        
+    async function deleteCharacter(characterId) {
         try {
-            console.log(`Deleting character with ID: ${playerId}`);
-            const result = await playerManager.deletePlayerCharacter(playerId);
+            if (!confirm('Are you sure you want to delete this character? This cannot be undone.')) {
+                return;
+            }
             
-            if (result) {
+            console.log(`Deleting character: ${characterId}`);
+            
+            const success = await playerManager.deletePlayerCharacter(characterId);
+            
+            if (success) {
                 console.log('Character deleted successfully');
-                alert('Character deleted successfully');
+                alert('Character deleted successfully.');
                 // Refresh character selection
-                await refreshCharacterList();
+                await showCharacterSelect();
+            } else {
+                alert('Failed to delete character. Please try again.');
             }
         } catch (error) {
             console.error('Error deleting character:', error);
-            alert('Failed to delete character: ' + error.message);
+            alert(`Error deleting character: ${error.message}`);
         }
     }
 
     function goToCharacterSelect() {
+        // Reset game state
         player = null;
         monster = null;
-        
-        // Reset game state
         gameState = 'character_select';
         
         // Show character select screen
@@ -968,66 +839,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const closeShopButton = getElement('close-shop');
         if (closeShopButton) {
             closeShopButton.addEventListener('click', closeShop);
-            console.log('Shop close button listener added');
-        }
-        
-        // Emergency character creation button
-        const emergencyCreateBtn = getElement('emergency-create-btn');
-        if (emergencyCreateBtn) {
-            emergencyCreateBtn.addEventListener('click', () => {
-                const nameInput = getElement('emergency-char-name');
-                if (nameInput && nameInput.value.trim()) {
-                    createCharacter(nameInput.value.trim());
-                } else {
-                    alert('Please enter a character name');
-                }
-            });
         }
     }
 
-    // Check login status
-    async function checkLoginStatus() {
-        try {
-            console.log('Checking login status...');
-            const { data, error } = await supabaseClient.auth.getUser();
-            
-            if (error) {
-                console.error('Error checking login status:', error);
-                showLoginForm();
-                return;
-            }
-            
-            if (data.user) {
-                console.log('User is logged in:', data.user.email);
-                // Show character selection
-                await showCharacterSelect();
-            } else {
-                console.log('No user is logged in');
-                showLoginForm();
-            }
-        } catch (error) {
-            console.error('Exception checking login status:', error);
-            showLoginForm();
-        }
-    }
-    
-    // Show login form
-    function showLoginForm() {
-        // Hide other containers
-        if (characterSelectEl) characterSelectEl.style.display = 'none';
-        if (gameContainer) gameContainer.style.display = 'none';
-        if (shopEl) shopEl.style.display = 'none';
-        
-        // Show auth form
-        if (authFormContainer) {
-            authFormContainer.style.display = 'block';
-            console.log('Login form displayed');
-        } else {
-            console.error('Auth form container not found');
-        }
-    }
-
-    // Initialize the game
+    // Main initialization
     async function initGame() {
         try {
             console.log('Game initialization started');
@@ -1035,17 +850,23 @@ document.addEventListener('DOMContentLoaded', function() {
             // Initialize event listeners
             initEventListeners();
             
-            // Check login status
-            await checkLoginStatus();
+            // Check if user is logged in
+            const { data: { user }, error } = await supabaseClient.auth.getUser();
+            
+            if (error || !user) {
+                console.log('No user logged in, showing auth form');
+                if (authFormContainer) authFormContainer.style.display = 'block';
+                return;
+            }
+            
+            console.log(`User logged in: ${user.email}`);
+            
+            // Show character selection screen
+            await showCharacterSelect();
             
             console.log('Game initialization completed');
         } catch (error) {
             console.error('Error initializing game:', error);
-            // Show emergency UI as a fallback
-            const emergencyCreator = getElement('emergency-character-creator');
-            if (emergencyCreator) {
-                emergencyCreator.style.display = 'block';
-            }
         }
     }
 
